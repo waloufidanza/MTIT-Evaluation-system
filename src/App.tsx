@@ -25,7 +25,9 @@ import {
   ShieldCheck,
   Building2,
   ArrowLeft,
-  TrendingUp
+  TrendingUp,
+  Award,
+  AlertTriangle
 } from 'lucide-react';
 import Dashboard from './components/Dashboard.tsx';
 import EmployeeForm from './components/EmployeeForm.tsx';
@@ -72,6 +74,12 @@ export default function App() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'alert' | 'info' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'alert' | 'info' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 5000);
+  };
 
   useEffect(() => {
     const seedIfEmpty = async () => {
@@ -261,7 +269,18 @@ export default function App() {
     setNotifications(newNotifs);
   };
 
-  const triggerRefresh = () => setRefreshTrigger(prev => prev + 1);
+  const triggerRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleEvaluationSuccess = (name: string, score: number, isDrop: boolean) => {
+    triggerRefresh();
+    if (isDrop) {
+      showToast(`تنبيه: انخفاض حاد في أداء ${name}! الدرجة الجديدة (%${score.toFixed(1)}) أقل بكثير من المتوسط السابق.`, 'alert');
+    } else {
+      showToast(`تم إنجاز تقييم جديد للموظف ${name} بنتيجة %${score.toFixed(1)}`, 'success');
+    }
+  };
 
   const handleNotifAction = async (employeeId: number) => {
     const emp = await db.employees.get(employeeId);
@@ -550,7 +569,7 @@ export default function App() {
                >
                  <div className="w-1.5 h-6 bg-accent rounded-full" />
                  <h2 className="text-2xl font-black text-primary tracking-tight">
-                    {activeTab === 'dashboard' ? 'لوحة المعلومات والذكاء' : 
+                    {activeTab === 'dashboard' ? 'لوحة التحكم الكاملة' : 
                      activeTab === 'employees' ? 'إدارة بيانات القوة البشرية' : 
                      activeTab === 'reports' ? 'التقارير التحليلية والمؤشرات' : 
                      'إدارة الهوية والصلاحيات'}
@@ -646,7 +665,7 @@ export default function App() {
           <EvaluationForm 
             employee={selectedEmployee} 
             onClose={() => setSelectedEmployee(null)} 
-            onSuccess={triggerRefresh} 
+            onSuccess={(score, isDrop) => handleEvaluationSuccess(selectedEmployee.name, score, isDrop)} 
           />
         )}
       </AnimatePresence>
@@ -685,6 +704,34 @@ export default function App() {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div 
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 20, opacity: 1 }}
+            exit={{ y: -50, opacity: 0 }}
+            className="fixed top-0 left-1/2 -translate-x-1/2 z-[300] max-w-md w-full px-4"
+          >
+            <div className={`p-4 rounded-2xl shadow-2xl border flex items-center gap-4 ${
+              toast.type === 'success' ? 'bg-emerald-600 border-emerald-500 text-white' :
+              toast.type === 'alert' ? 'bg-red-600 border-red-500 text-white' :
+              'bg-primary border-primary/50 text-white'
+            }`}>
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0 text-accent">
+                {toast.type === 'success' ? <Award size={20} /> : <AlertTriangle size={20} className="text-white" />}
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-0.5">تنبيه النظام</p>
+                <p className="text-xs font-bold leading-relaxed">{toast.message}</p>
+              </div>
+              <button onClick={() => setToast(null)} className="p-1 hover:bg-white/10 rounded-full">
+                <X size={16} />
+              </button>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

@@ -17,7 +17,8 @@ import {
   Target,
   ArrowRight,
   Filter,
-  ArrowUpDown
+  ArrowUpDown,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -151,6 +152,32 @@ export default function DepartmentReports() {
     return grouped;
   }, [employees, evaluations, selectedCategory, sortBy, sortOrder]);
 
+  const handleExportCSV = () => {
+    const allData = Object.values(departmentData).flat();
+    const headers = ['Department Name', 'Category', 'Staff Count', 'Completion Rate (%)', 'Average Score (%)'];
+    const rows = allData.map(d => [
+      d.name,
+      d.category,
+      d.staffCount,
+      d.completionRate.toFixed(1),
+      d.averageScore.toFixed(1)
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(r => r.join(','))
+    ].join('\n');
+
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `department_performance_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-12 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="bg-white rounded-2xl border border-border-theme shadow-sm overflow-hidden">
@@ -224,6 +251,15 @@ export default function DepartmentReports() {
             title={sortOrder === 'asc' ? 'ترتيب تنازلي' : 'ترتيب تصاعدي'}
           >
             <ArrowUpDown size={16} className={sortOrder === 'asc' ? 'rotate-180 transition-transform' : 'transition-transform'} />
+          </button>
+          
+          <div className="w-px h-6 bg-border-theme hidden md:block mx-2" />
+
+          <button 
+            onClick={handleExportCSV}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-[11px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md shadow-emerald-200"
+          >
+            <Download size={14} /> تصدير CSV
           </button>
         </div>
       </div>

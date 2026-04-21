@@ -38,6 +38,7 @@ import {
   XCircle,
   GripVertical,
   Plus,
+  RefreshCw,
   ShieldCheck,
   FileEdit
 } from 'lucide-react';
@@ -459,8 +460,49 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-8 bg-white p-4 rounded-3xl"
+                className="space-y-8"
               >
+                {/* Latest Evaluation Quick Summary Card */}
+                {latestEvaluation && (
+                  <div className="bg-gradient-to-r from-primary to-primary/80 rounded-3xl p-6 text-white shadow-xl shadow-primary/20 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-full bg-white/5 skew-x-[-20deg] origin-top translate-x-12" />
+                    <div className="flex items-center gap-5 relative z-10">
+                      <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-accent border border-white/30">
+                        <Award size={32} />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-[0.2em] opacity-80 mb-1">ملخص آخر حالة تقييم</h4>
+                        <div className="flex items-center gap-3">
+                          <span className="text-3xl font-black">%{latestEvaluation.totalScore.toFixed(1)}</span>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/20 border border-white/30`}>
+                            {latestEvaluation.totalScore >= 90 ? 'ممتاز جداً' :
+                             latestEvaluation.totalScore >= 75 ? 'جيد جداً' :
+                             latestEvaluation.totalScore >= 50 ? 'جيد' : 'يحتاج تحسين'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-8 relative z-10">
+                       <div className="text-center">
+                          <p className="text-[10px] font-black opacity-60 uppercase mb-1">دورة التقييم</p>
+                          <p className="font-bold text-sm tracking-wide">{latestEvaluation.period === 'monthly' ? 'شهرية' : latestEvaluation.period === 'quarterly' ? 'ربع سنوية' : 'سنوية'}</p>
+                       </div>
+                       <div className="w-px h-10 bg-white/20" />
+                       <div className="text-center">
+                          <p className="text-[10px] font-black opacity-60 uppercase mb-1">تاريخ التقييم</p>
+                          <p className="font-bold text-sm tracking-wide">{latestEvaluation.date}</p>
+                       </div>
+                       <div className="w-px h-10 bg-white/20" />
+                       <div className="text-center">
+                          <p className="text-[10px] font-black opacity-60 uppercase mb-1">الحضور</p>
+                          <p className="font-bold text-sm tracking-wide">{latestEvaluation.attendance}</p>
+                       </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 bg-white p-4 rounded-3xl">
                 <div className="space-y-6">
                   <h3 className="flex items-center gap-2 text-sm font-black text-text-dark uppercase border-r-4 border-primary pr-3 mb-6">
                     المعلومات الشخصية والوظيفية
@@ -516,6 +558,7 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
                     )}
                   </div>
                 </div>
+              </div>
               </motion.div>
             ) : activeSubTab === 'compare' ? (
               <motion.div 
@@ -597,18 +640,39 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
                 className="space-y-6"
               >
                 {/* Embedded Filter Section */}
-                <div className="bg-slate-50 border border-border-theme rounded-2xl p-6 mb-8">
-                  <div className="flex flex-wrap items-end gap-6">
-                    <div className="flex-1 min-w-[200px]">
-                      <label className="text-[10px] font-black text-text-muted uppercase mb-2 block tracking-widest flex items-center gap-2">
-                        <Filter size={12} className="text-primary" /> نوع دورة التقييم
-                      </label>
-                      <select 
+                <div className="bg-white border-2 border-slate-100 rounded-3xl p-6 mb-8 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-6 mb-6 pb-4 border-b border-slate-100">
+                    <div className="flex items-center gap-3">
+                       <div className="p-2 bg-primary/10 rounded-xl text-primary">
+                          <Filter size={18} />
+                       </div>
+                       <div>
+                          <h3 className="text-sm font-black text-text-dark tracking-tight">فلترة السجل التاريخي</h3>
+                          <p className="text-[10px] text-text-muted font-bold">تحديد دورات محددة أو نطاق زمني معين</p>
+                       </div>
+                    </div>
+                    
+                    <button 
+                      onClick={() => {
+                        setFilterPeriod('all');
+                        setStartDate('');
+                        setEndDate('');
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-text-muted hover:text-primary rounded-xl text-[10px] font-black transition-all border border-border-theme uppercase tracking-wider"
+                    >
+                      <RefreshCw size={12} /> تصفير كافة الفلاتر
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-text-muted uppercase tracking-widest pr-1">نوع دورة التقييم</label>
+                       <select 
                         value={filterPeriod}
                         onChange={e => setFilterPeriod(e.target.value as any)}
-                        className="w-full px-4 py-2 bg-white border border-border-theme rounded-xl text-xs font-bold focus:ring-1 focus:ring-primary outline-none"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-border-theme rounded-xl text-xs font-bold focus:border-primary outline-none transition-all"
                       >
-                        <option value="all">كل الفترات</option>
+                        <option value="all">كافة الدورات (All Periods)</option>
                         <option value="monthly">تقييم شهري</option>
                         <option value="quarterly">تقييم ربع سنوي</option>
                         <option value="semi-annual">تقييم نصف سنوي</option>
@@ -616,36 +680,25 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
                       </select>
                     </div>
 
-                    <div className="flex-1 min-w-[150px]">
-                      <label className="text-[10px] font-black text-text-muted uppercase mb-2 block tracking-widest">من تاريخ</label>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest pr-1">من تاريخ</label>
                       <input 
                         type="date"
                         value={startDate}
                         onChange={e => setStartDate(e.target.value)}
-                        className="w-full px-4 py-2 bg-white border border-border-theme rounded-xl text-xs font-bold focus:ring-1 focus:ring-primary outline-none"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-border-theme rounded-xl text-xs font-bold focus:border-primary outline-none transition-all"
                       />
                     </div>
 
-                    <div className="flex-1 min-w-[150px]">
-                      <label className="text-[10px] font-black text-text-muted uppercase mb-2 block tracking-widest">إلى تاريخ</label>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest pr-1">إلى تاريخ</label>
                       <input 
                         type="date"
                         value={endDate}
                         onChange={e => setEndDate(e.target.value)}
-                        className="w-full px-4 py-2 bg-white border border-border-theme rounded-xl text-xs font-bold focus:ring-1 focus:ring-primary outline-none"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-border-theme rounded-xl text-xs font-bold focus:border-primary outline-none transition-all"
                       />
                     </div>
-
-                    <button 
-                      onClick={() => {
-                        setFilterPeriod('all');
-                        setStartDate('');
-                        setEndDate('');
-                      }}
-                      className="text-[11px] font-black text-primary hover:text-secondary px-4 py-2 uppercase tracking-widest underline underline-offset-4"
-                    >
-                      تصفير الفلاتر
-                    </button>
                   </div>
                 </div>
 
@@ -742,7 +795,7 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
                                           ) : (
                                             <FileDown size={14} />
                                           )}
-                                          {isDownloading === evalItem.id ? 'جاري التحميل...' : 'تحميل PDF'}
+                                          {isDownloading === evalItem.id ? 'جاري التحميل...' : 'تنزيل تقرير التقييم (PDF)'}
                                         </button>
                                       </div>
                                       {expandedEvalId === evalItem.id ? <ChevronUp className="text-text-muted" /> : <ChevronDown className="text-text-muted" />}

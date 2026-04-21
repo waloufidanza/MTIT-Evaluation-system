@@ -14,7 +14,7 @@ import { analyzeEvaluations } from '../services/geminiService.ts';
 interface EvaluationFormProps {
   employee: Employee;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (score: number, isDrop: boolean) => void;
 }
 
 export default function EvaluationForm({ employee, onClose, onSuccess }: EvaluationFormProps) {
@@ -217,8 +217,20 @@ export default function EvaluationForm({ employee, onClose, onSuccess }: Evaluat
     };
 
     try {
+      // Check for performance drop relative to last few evals
+      const previous = await db.evaluations
+        .where('employeeId')
+        .equals(employee.id!)
+        .toArray();
+      
+      const avgScore = previous.length >= 2 
+        ? previous.reduce((acc, curr) => acc + curr.totalScore, 0) / previous.length 
+        : totalScore; // If no previous or only one, we can't really call it a "drop" easily, but let's assume no drop
+
+      const isDrasticDrop = previous.length >= 2 && totalScore < avgScore * 0.85;
+
       await db.evaluations.add(evaluation);
-      onSuccess();
+      onSuccess(totalScore, isDrasticDrop);
       onClose();
     } catch (err) {
       console.error("Failed to save evaluation:", err);
