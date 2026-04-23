@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../db.ts';
 import { Employee, StaffType, EmployeeCategory } from '../types.ts';
-import { UserPlus, X, Briefcase, Hash, Building2, User, Save, Users2, Calendar, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { UserPlus, X, Briefcase, Hash, Building2, User, Save, Users2, Calendar, ArrowLeft, AlertTriangle, Fingerprint, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface EmployeeFormProps {
@@ -59,6 +59,7 @@ export default function EmployeeForm({ onClose, onSuccess, employee }: EmployeeF
   ];
 
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,8 +96,40 @@ export default function EmployeeForm({ onClose, onSuccess, employee }: EmployeeF
       onClose();
     } catch (err) {
       console.error("Failed to save employee data:", err);
-      const errorMsg = err instanceof Error ? err.message : "حدث خطأ غير معروف";
-      setError(`فشل حفظ البيانات: ${errorMsg}`);
+      let errorMsg = "حدث خطأ غير متوقع أثناء حفظ البيانات";
+      
+      if (err instanceof Error) {
+        if (err.name === 'ConstraintError' || err.message.includes('unique')) {
+          errorMsg = "فشل الحفظ: توجد بيانات مكررة (الاسم أو الرقم الوظيفي) مسجلة لموظف آخر";
+        } else if (err.name === 'QuotaExceededError') {
+          errorMsg = "فشل الحفظ: تجاوزت مساحة التخزين المتاحة. يرجى مسح بعض البيانات القديمة";
+        } else {
+          errorMsg = `فشل حفظ البيانات: ${err.message}`;
+        }
+      }
+      
+      setError(errorMsg);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!formData.id) return;
+    setError(null);
+    try {
+      // First delete all evaluations associated with this employee to maintain referential integrity
+      await db.evaluations.where('employeeId').equals(formData.id).delete();
+      // Then delete the employee
+      await db.employees.delete(formData.id);
+      onSuccess();
+      onClose();
+    } catch (err) {
+      console.error("Failed to delete employee:", err);
+      let errorMsg = "حدث خطأ غير متوقع أثناء محاولة الحذف";
+      if (err instanceof Error) {
+        errorMsg = `فشل الحذف: ${err.message}`;
+      }
+      setError(errorMsg);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -160,6 +193,19 @@ export default function EmployeeForm({ onClose, onSuccess, employee }: EmployeeF
                 onChange={e => setFormData({ ...formData, employeeId: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl border border-border-theme focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm font-black bg-slate-50"
                 placeholder="0001"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-text-muted flex items-center gap-2 uppercase tracking-widest mb-1">
+                <Fingerprint className="w-3 h-3 text-primary" /> كود البصمة التحضيرية
+              </label>
+              <input
+                type="text"
+                value={formData.biometricId || ''}
+                onChange={e => setFormData({ ...formData, biometricId: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl border border-border-theme focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm font-black bg-slate-50"
+                placeholder="رقم البصمة"
               />
             </div>
 
@@ -301,23 +347,80 @@ export default function EmployeeForm({ onClose, onSuccess, employee }: EmployeeF
           </div>
 
           <div className="pt-6 flex flex-col md:flex-row gap-4">
+             {formData.id && (
+               <button
+                 type="button"
+                 onClick={() => setShowDeleteConfirm(true)}
+                 className="flex-1 flex items-center justify-center gap-2 bg-red-50 text-red-600 font-black text-xs uppercase tracking-widest py-5 rounded-2xl hover:bg-red-100 transition-all border-b-4 border-red-200 active:translate-y-1 order-3 md:order-1"
+               >
+                 <Trash2 size={18} />
+                 حذف الموظف
+               </button>
+             )}
              <button
               type="submit"
               className="flex-[2] flex items-center justify-center gap-3 bg-primary text-white font-black text-sm uppercase tracking-widest py-5 rounded-2xl hover:bg-secondary transition-all shadow-xl hover:shadow-primary/20 border-b-4 border-accent active:translate-y-1 group order-1 md:order-2"
             >
               <Save size={20} className="group-hover:scale-110 transition-transform" />
-              {formData.id ? 'حفظ التغييرات النهائية' : 'إعتماد تسجيل الموظف'}
+              {formData.id ? 'حفظ التغييرات النهائية' : 'إعتمد تسجيل الموظف'}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 flex items-center justify-center gap-2 bg-slate-100 text-text-muted font-black text-xs uppercase tracking-widest py-5 rounded-2xl hover:bg-slate-200 transition-all border-b-4 border-slate-300 active:translate-y-1 order-2 md:order-1"
+              className="flex-1 flex items-center justify-center gap-2 bg-slate-100 text-text-muted font-black text-xs uppercase tracking-widest py-5 rounded-2xl hover:bg-slate-200 transition-all border-b-4 border-slate-300 active:translate-y-1 order-2 md:order-3"
             >
               <ArrowLeft size={18} />
-              إلغاء العملية
+              إلغاء
             </button>
           </div>
         </form>
+
+        {/* Delete Confirmation Dialog */}
+        <AnimatePresence>
+          {showDeleteConfirm && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowDeleteConfirm(false)}
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              />
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className="bg-white rounded-3xl shadow-2xl border border-border-theme w-full max-w-sm overflow-hidden relative z-10"
+              >
+                <div className="p-8 text-center text-right" dir="rtl">
+                  <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
+                    <Trash2 size={40} />
+                  </div>
+                  <h3 className="text-xl font-black text-text-dark mb-4">تأكيد حذف الموظف</h3>
+                  <p className="text-text-muted text-sm font-bold leading-relaxed mb-8">
+                    هل أنت متأكد من رغبتك في حذف الموظف <span className="text-red-600">"{formData.name}"</span>؟ 
+                    هذا الاجراء لا يمكن التراجع عنه وسيتم حذف كافة التقييمات المرتبطة.
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <button 
+                      onClick={() => setShowDeleteConfirm(false)}
+                      className="py-3 px-6 bg-slate-100 hover:bg-slate-200 text-text-muted font-black text-xs uppercase tracking-widest rounded-xl transition-all"
+                    >
+                      إلغاء (Cancel)
+                    </button>
+                    <button 
+                      onClick={handleDelete}
+                      className="py-3 px-6 bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-red-200"
+                    >
+                      تأكيد الحذف (Confirm)
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );

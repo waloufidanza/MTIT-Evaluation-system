@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { db } from '../db.ts';
 import { Employee, Evaluation, EvaluationPeriod } from '../types.ts';
-import { History, X, Calendar, FileText, ChevronDown, ChevronUp, Award, Filter, Search } from 'lucide-react';
+import { History, X, Calendar, FileText, ChevronDown, ChevronUp, Award, Filter, Search, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface EvaluationHistoryProps {
@@ -17,6 +17,7 @@ export default function EvaluationHistory({ employee, onClose }: EvaluationHisto
   const [filterPeriod, setFilterPeriod] = useState<EvaluationPeriod | 'all'>('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     loadHistory();
@@ -37,9 +38,15 @@ export default function EvaluationHistory({ employee, onClose }: EvaluationHisto
       const matchesPeriod = filterPeriod === 'all' || item.period === filterPeriod;
       const matchesStart = !startDate || item.date >= startDate;
       const matchesEnd = !endDate || item.date <= endDate;
-      return matchesPeriod && matchesStart && matchesEnd;
+      
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = !searchTerm || 
+        (item.notes && item.notes.toLowerCase().includes(searchLower)) ||
+        item.criteria.some(c => c.label.toLowerCase().includes(searchLower));
+        
+      return matchesPeriod && matchesStart && matchesEnd && matchesSearch;
     });
-  }, [history, filterPeriod, startDate, endDate]);
+  }, [history, filterPeriod, startDate, endDate, searchTerm]);
 
   const getPeriodLabel = (period: string) => {
     switch (period) {
@@ -52,200 +59,189 @@ export default function EvaluationHistory({ employee, onClose }: EvaluationHisto
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-primary/40 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-lg shadow-2xl w-full max-w-4xl overflow-hidden relative my-8 border-b-4 border-accent"
+        initial={{ opacity: 0, y: 30, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        className="bg-white rounded-[3rem] shadow-2xl w-full max-w-5xl overflow-hidden relative my-8 border border-white/20"
       >
-        <div className="bg-primary p-6 text-white flex justify-between items-center border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <History className="w-5 h-5 text-accent" />
+        <div className="bg-primary p-8 text-white flex justify-between items-center relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-accent opacity-5 blur-[80px] rounded-full translate-x-1/2 -translate-y-1/2" />
+          <div className="flex items-center gap-5 relative z-10">
+            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-accent">
+              <History size={32} />
+            </div>
             <div>
-              <h2 className="text-lg font-bold">سجل التقييمات الكامل</h2>
-              <p className="text-white/70 text-[10px] uppercase font-bold tracking-widest">الموظف: {employee.name}</p>
+              <h2 className="text-2xl font-black tracking-tighter">سجل تقييمات الكادر</h2>
+              <p className="text-white/50 text-[10px] uppercase font-black tracking-[0.2em] mt-1">{employee.name} | الرقم الوظيفي #{employee.employeeId}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-white/10 rounded transition-colors">
-            <X className="w-6 h-6" />
+          <button 
+            onClick={onClose} 
+            className="w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-2xl transition-all relative z-10 group"
+          >
+            <X className="w-6 h-6 transition-transform group-hover:rotate-90" />
           </button>
         </div>
 
         {/* Filter Section */}
-        <div className="bg-slate-50 border-b border-border-theme p-4 px-6 md:px-8">
-          <div className="flex flex-wrap items-end gap-4">
-            <div className="flex-1 min-w-[150px]">
-              <label className="text-[10px] font-bold text-text-muted uppercase mb-1 block">تصفية حسب نوع التقييم</label>
-              <div className="relative">
-                <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
-                <select 
-                  value={filterPeriod}
-                  onChange={e => setFilterPeriod(e.target.value as any)}
-                  className="w-full pr-9 pl-3 py-2 bg-white border border-border-theme rounded text-xs focus:ring-1 focus:ring-primary outline-none appearance-none"
-                >
-                  <option value="all">كل الفترات</option>
-                  <option value="monthly">شهري</option>
-                  <option value="quarterly">ربع سنوي</option>
-                  <option value="semi-annual">نصف سنوي</option>
-                  <option value="annual">سنوي</option>
-                </select>
+        <div className="bg-slate-50 border-b border-border-theme p-6 px-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+            <div className="space-y-2">
+              <label className="text-label">نوع التقييم</label>
+              <select 
+                value={filterPeriod}
+                onChange={e => setFilterPeriod(e.target.value as any)}
+                className="w-full px-4 py-3 bg-white border border-border-theme rounded-2xl text-xs font-bold outline-none shadow-sm focus:ring-2 focus:ring-accent/20"
+              >
+                <option value="all">كل الفترات</option>
+                <option value="monthly">شهري</option>
+                <option value="quarterly">ربع سنوي</option>
+                <option value="semi-annual">نصف سنوي</option>
+                <option value="annual">سنوي</option>
+              </select>
+            </div>
+
+            <div className="md:col-span-2 space-y-2">
+              <label className="text-label">البحث المحتوى (المعايير أو الملاحظات)</label>
+              <div className="relative text-right">
+                <Search size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted" />
+                <input 
+                  type="text"
+                  placeholder="ابحث..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full pr-11 pl-4 py-3 bg-white border border-border-theme rounded-2xl text-xs font-bold outline-none shadow-sm focus:ring-2 focus:ring-accent/20"
+                />
               </div>
             </div>
 
-            <div className="flex-1 min-w-[150px]">
-              <label className="text-[10px] font-bold text-text-muted uppercase mb-1 block">من تاريخ</label>
-              <input 
-                type="date"
-                value={startDate}
-                onChange={e => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-border-theme rounded text-xs focus:ring-1 focus:ring-primary outline-none"
-              />
+            <div className="flex gap-2">
+               <div className="flex-1 space-y-1">
+                 <label className="text-[9px] font-black text-text-muted uppercase">من</label>
+                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full h-11 px-3 bg-white border border-border-theme rounded-xl text-[10px] font-bold" />
+               </div>
+               <div className="flex-1 space-y-1">
+                 <label className="text-[9px] font-black text-text-muted uppercase">إلى</label>
+                 <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full h-11 px-3 bg-white border border-border-theme rounded-xl text-[10px] font-bold" />
+               </div>
+               <button 
+                 onClick={() => { setFilterPeriod('all'); setStartDate(''); setEndDate(''); setSearchTerm(''); }}
+                 className="h-11 px-4 bg-white border border-border-theme rounded-xl text-[10px] font-black text-red-500 hover:bg-red-50 transition-all uppercase"
+               >
+                 تصفير
+               </button>
             </div>
-
-            <div className="flex-1 min-w-[150px]">
-              <label className="text-[10px] font-bold text-text-muted uppercase mb-1 block">إلى تاريخ</label>
-              <input 
-                type="date"
-                value={endDate}
-                onChange={e => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-border-theme rounded text-xs focus:ring-1 focus:ring-primary outline-none"
-              />
-            </div>
-
-            <button 
-              onClick={() => {
-                setFilterPeriod('all');
-                setStartDate('');
-                setEndDate('');
-              }}
-              className="text-[10px] font-bold text-primary hover:text-secondary px-2 py-2 underline"
-            >
-              إعادة تعيين
-            </button>
           </div>
         </div>
 
-        <div className="p-6 md:p-8 max-h-[60vh] overflow-y-auto">
+        <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar text-right">
           {filteredHistory.length === 0 ? (
-            <div className="py-12 text-center">
-              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-border-theme">
-                <Search className="w-8 h-8 text-slate-300" />
+            <div className="py-20 text-center">
+              <div className="w-24 h-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-slate-100">
+                <Search size={40} className="text-slate-200" />
               </div>
-              <p className="text-text-muted font-bold">لم يتم العثور على تقييمات تطابق خيارات التصفية</p>
+              <p className="text-text-muted font-black uppercase tracking-widest text-sm">لم يتم العثور على تقييمات</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {filteredHistory.map((evalItem) => (
-                <div key={evalItem.id} className="border border-border-theme rounded overflow-hidden shadow-sm">
+                <div key={evalItem.id} className="bg-white border border-border-theme rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-md transition-all">
                   <div 
                     onClick={() => setExpandedId(expandedId === evalItem.id ? null : evalItem.id!)}
-                    className="p-4 bg-white hover:bg-slate-50 cursor-pointer flex items-center justify-between transition-colors"
+                    className="p-6 md:p-8 hover:bg-slate-50/50 cursor-pointer flex items-center justify-between transition-colors group"
                   >
-                    <div className="flex items-center gap-6">
+                    <div className="flex flex-wrap items-center gap-10">
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-text-muted uppercase">تاريخ التقييم</span>
-                        <div className="flex items-center gap-2 text-sm font-bold text-text-dark">
-                          <Calendar className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-label mb-1">تاريخ التقييم</span>
+                        <div className="flex items-center gap-2 text-sm font-black text-primary">
+                          <Calendar size={16} className="text-accent" />
                           {evalItem.date}
                         </div>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-text-muted uppercase">نوع التقييم</span>
-                        <span className="text-sm font-bold text-primary">{getPeriodLabel(evalItem.period)}</span>
+                        <span className="text-label mb-1">نوع الدورة</span>
+                        <span className="text-sm font-black text-primary bg-slate-100 px-3 py-1 rounded-full">{getPeriodLabel(evalItem.period)}</span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-text-muted uppercase">الدرجة النهائية</span>
+                        <span className="text-label mb-1">النتيجة النهائية</span>
                         <div className="flex items-center gap-2">
-                          <Award className="w-3.5 h-3.5 text-accent" />
-                          <span className="text-base font-black text-secondary">%{evalItem.totalScore.toFixed(0)}</span>
+                          <Award size={18} className="text-accent" />
+                          <span className={`text-xl font-black ${
+                            evalItem.totalScore >= 90 ? 'text-emerald-600' :
+                            evalItem.totalScore >= 75 ? 'text-blue-600' :
+                            evalItem.totalScore >= 50 ? 'text-amber-600' : 'text-red-600'
+                          }`}>%{evalItem.totalScore.toFixed(0)}</span>
                         </div>
                       </div>
                       {evalItem.evaluatingDepartment && (
-                        <div className="flex flex-col border-r border-border-theme pr-4">
-                          <span className="text-[9px] font-bold text-secondary uppercase mb-0.5">الإدارة</span>
-                          <span className="text-[11px] font-black text-secondary">{evalItem.evaluatingDepartment}</span>
+                        <div className="flex flex-col border-r-2 border-slate-100 pr-10">
+                          <span className="text-label mb-1">الإدارة المقيمة</span>
+                          <span className="text-sm font-black text-primary">{evalItem.evaluatingDepartment}</span>
                         </div>
                       )}
                     </div>
-                    {expandedId === evalItem.id ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
+                    <div className={`w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center transition-all ${expandedId === evalItem.id ? 'rotate-180 bg-accent/10 text-accent' : 'group-hover:bg-slate-100'}`}>
+                      <ChevronDown size={20} />
+                    </div>
                   </div>
 
                   <AnimatePresence>
                     {expandedId === evalItem.id && (
                       <motion.div
-                        initial={{ height: 0 }}
-                        animate={{ height: 'auto' }}
-                        exit={{ height: 0 }}
-                        className="overflow-hidden bg-[#fafafa] border-t border-border-theme"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden bg-slate-50/50 border-t border-border-theme"
                       >
-                        <div className="p-6 space-y-6">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-3">
-                              <h4 className="text-[11px] font-bold text-primary uppercase tracking-widest border-r-2 border-primary pr-2">تفاصيل المعايير</h4>
-                              <div className="space-y-2">
+                        <div className="p-8 md:p-10 space-y-10">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                            <div className="space-y-6">
+                              <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-3">
+                                 <div className="w-1.5 h-1.5 bg-accent rounded-full" /> تفاصيل معايير الأداء
+                              </h4>
+                              <div className="grid grid-cols-1 gap-3">
                                 {evalItem.criteria.map((c, idx) => (
-                                  <div key={idx} className="flex justify-between items-center text-xs p-2 bg-white rounded border border-border-theme">
-                                    <span className="text-text-dark font-medium">{c.label}</span>
-                                    <span className="font-bold text-secondary">{c.score} / 5</span>
+                                  <div key={idx} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-border-theme shadow-sm">
+                                    <span className="text-xs font-black text-primary">{c.label}</span>
+                                    <div className="flex items-center gap-2">
+                                       <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
+                                          <div className="h-full bg-accent" style={{ width: `${(c.score/5)*100}%` }} />
+                                       </div>
+                                       <span className="text-xs font-black text-accent">{c.score} / 5</span>
+                                    </div>
                                   </div>
                                 ))}
                               </div>
                             </div>
-                            <div className="space-y-6">
-                              <div className="space-y-3">
-                                <h4 className="text-[11px] font-bold text-primary uppercase tracking-widest border-r-2 border-primary pr-2">التقييم السلوكي والإداري</h4>
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="p-2 bg-white rounded border border-border-theme">
-                                    <p className="text-[9px] text-text-muted font-bold uppercase mb-1">الانضباط</p>
-                                    <p className="text-[10px] font-black text-text-dark text-center">
-                                      {evalItem.attendance === 'excellent' ? 'ممتاز' : 
-                                       evalItem.attendance === 'good' ? 'جيد' : 
-                                       evalItem.attendance === 'average' ? 'متوسط' : 'ضعيف'}
-                                    </p>
-                                  </div>
-                                  <div className="p-2 bg-white rounded border border-border-theme">
-                                    <p className="text-[9px] text-text-muted font-bold uppercase mb-1">الالتزام</p>
-                                    <p className="text-[10px] font-black text-text-dark text-center">
-                                      {evalItem.discipline === 'committed' ? 'ملتزم جداً' : 
-                                       evalItem.discipline === 'needs-improvement' ? 'يحتاج تحسين' : 'لديه تنبيهات'}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {evalItem.trainingNeeds && evalItem.trainingNeeds.length > 0 && (
-                                <div className="space-y-3">
-                                  <h4 className="text-[11px] font-bold text-primary uppercase tracking-widest border-r-2 border-primary pr-2">الاحتياجات التدريبية</h4>
-                                  <div className="flex flex-wrap gap-1">
-                                    {evalItem.trainingNeeds.map((need, idx) => (
-                                      <span key={idx} className="text-[9px] font-bold bg-secondary/5 text-secondary border border-secondary/10 px-2 py-1 rounded">
-                                        {need}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
 
-                              <div className="space-y-3">
-                                <h4 className="text-[11px] font-bold text-primary uppercase tracking-widest border-r-2 border-primary pr-2">ملاحظات التقييم</h4>
-                                <div className="p-4 bg-white rounded border border-border-theme text-xs text-text-dark min-h-[60px] leading-relaxed">
-                                  {evalItem.notes || <span className="text-slate-300 italic">لا توجد ملاحظات مسجلة</span>}
-                                </div>
-                              </div>
+                            <div className="space-y-8">
+                               <div className="space-y-6">
+                                  <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-3">
+                                     <div className="w-1.5 h-1.5 bg-accent rounded-full" /> السلوك والنمو
+                                  </h4>
+                                  <div className="grid grid-cols-2 gap-4">
+                                     <div className="bg-white p-4 rounded-2xl border border-border-theme shadow-sm">
+                                        <p className="text-[10px] font-black text-text-muted uppercase mb-1">الانضباط والحضور</p>
+                                        <p className="text-xs font-black text-primary uppercase">{evalItem.attendance}</p>
+                                     </div>
+                                     <div className="bg-white p-4 rounded-2xl border border-border-theme shadow-sm">
+                                        <p className="text-[10px] font-black text-text-muted uppercase mb-1">الرغبة في التطوير</p>
+                                        <p className="text-xs font-black text-primary uppercase">{evalItem.willingnessToImprove}</p>
+                                     </div>
+                                  </div>
+                               </div>
+
+                               <div className="space-y-4">
+                                  <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-3">
+                                     <div className="w-1.5 h-1.5 bg-accent rounded-full" /> الملاحظات والتوجيهات
+                                  </h4>
+                                  <div className="bg-white p-6 rounded-2xl border border-border-theme shadow-sm text-sm font-medium leading-loose text-primary italic">
+                                     {evalItem.notes || 'لا توجد ملاحظات إضافية مسجلة.'}
+                                  </div>
+                               </div>
                             </div>
                           </div>
-
-                          {evalItem.aiAnalysis && (
-                            <div className="space-y-3">
-                              <h4 className="text-[11px] font-bold text-accent uppercase tracking-widest border-r-2 border-accent pr-2 flex items-center gap-2">
-                                <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-                                التحليل الذكي للوزارة
-                              </h4>
-                              <div className="p-4 ai-gradient text-white rounded text-[11px] leading-relaxed shadow-inner opacity-90 prose-invert prose-sm max-w-none text-right">
-                                <div dangerouslySetInnerHTML={{ __html: evalItem.aiAnalysis.replace(/\n/g, '<br/>') }} />
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </motion.div>
                     )}

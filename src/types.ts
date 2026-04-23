@@ -12,18 +12,23 @@ export interface Employee {
   id?: number;
   name: string;
   employeeId: string;
+  biometricId?: string; // رقم البصمة التحضيرية
+  biometricStatus?: 'online' | 'offline' | 'unknown';
+  lastBiometricSync?: string;
   department: string;
   position: string;
   type: StaffType;
   category?: EmployeeCategory;
   joinDate: string;
   secondDepartment?: string;
+  customCriteria?: { label: string; weight: number; description?: string }[];
 }
 
 export interface EvaluationCriteria {
   label: string;
   score: number; // 1-5
   weight: number;
+  description?: string;
 }
 
 export interface Evaluation {
@@ -36,6 +41,7 @@ export interface Evaluation {
   criteria: EvaluationCriteria[];
   attendance: 'excellent' | 'good' | 'average' | 'poor';
   discipline: 'committed' | 'needs-improvement' | 'warning';
+  willingnessToImprove?: number; // 0-100
   trainingNeeds: string[];
   notes: string;
   totalScore: number;
@@ -82,6 +88,8 @@ export interface EvaluationModel {
   name: string;
   positionTags: string[]; // e.g. ["مهندس برمجيات", "مدير مشروع"]
   departmentTags: string[]; // e.g. ["تطوير", "البنية التحتية"]
+  typeTags?: string[]; // e.g. ["technical", "non-technical"]
+  categoryTags?: string[]; // e.g. ["internal", "consultant"]
   criteria: {
     label: string;
     weight: number;

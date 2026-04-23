@@ -40,7 +40,13 @@ import {
   Plus,
   RefreshCw,
   ShieldCheck,
-  FileEdit
+  FileEdit,
+  Activity,
+  Trash2,
+  Lightbulb,
+  Star,
+  Fingerprint,
+  Wifi
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import jsPDF from 'jspdf';
@@ -48,6 +54,9 @@ import html2canvas from 'html2canvas';
 import { 
   LineChart, 
   Line, 
+  BarChart,
+  Bar,
+  Cell,
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -61,6 +70,19 @@ interface EmployeeDetailsProps {
   onEditEmployee?: (employee: Employee) => void;
   onEvaluateUser?: (employee: Employee) => void;
 }
+
+const TRAINING_MAPPING: Record<string, string[]> = {
+  'فني': ['دورة متقدمة في الصيانة الوقائية', 'تدريب على أنظمة القياس الحديثة'],
+  'جودة': ['دورة في ضبط الجودة الشاملة', 'تحليل الأخطاء المتقن'],
+  'تواصل': ['مهارات الاتصال الفعال', 'إدارة النزاعات في بيئة العمل'],
+  'إداري': ['مهارات الأرشفة الإلكترونية', 'إدارة الوقت والاجتماع'],
+  'قياد': ['المهارات القيادية الإشرافية', 'اتخاذ القرارات الاستراتيجية'],
+  'تعامل': ['لباقة التعامل مع الجمهور', 'الذكاء العاطفي'],
+  'دقة': ['التركيز والتدقيق المهني', 'إدارة البيانات'],
+  'سرعة': ['تحسين الإنتاجية الفردية', 'إدارة الأولويات'],
+  'التزام': ['قواعد السلوك الوظيفي', 'الوعي باللوائح الداخلية'],
+  'فريق': ['بناء فرق العمل عالية الأداء', 'التعاون المؤسسي']
+};
 
 export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: EmployeeDetailsProps) {
   const { id } = useParams<{ id: string }>();
@@ -81,6 +103,41 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
   const [filterPeriod, setFilterPeriod] = useState<EvaluationPeriod | 'all'>('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  // States for Custom Criteria
+  const [showAddCustomCriterion, setShowAddCustomCriterion] = useState(false);
+  const [newCriterionLabel, setNewCriterionLabel] = useState('');
+  const [newCriterionWeight, setNewCriterionWeight] = useState(20);
+
+  const handleAddCustomCriterion = async () => {
+    if (!employee || !newCriterionLabel.trim()) return;
+    
+    const updatedCriteria = [
+      ...(employee.customCriteria || []),
+      { label: newCriterionLabel, weight: newCriterionWeight }
+    ];
+    
+    await db.employees.update(employee.id!, { customCriteria: updatedCriteria });
+    setEmployee({ ...employee, customCriteria: updatedCriteria });
+    setShowAddCustomCriterion(false);
+    setNewCriterionLabel('');
+    setNewCriterionWeight(20);
+  };
+
+  const handleRemoveCustomCriterion = async (index: number) => {
+    if (!employee || !employee.customCriteria) return;
+    
+    const updatedCriteria = [...employee.customCriteria];
+    updatedCriteria.splice(index, 1);
+    
+    await db.employees.update(employee.id!, { customCriteria: updatedCriteria });
+    setEmployee({ ...employee, customCriteria: updatedCriteria });
+  };
+
+  const getSuggestedTraining = (criteriaLabel: string) => {
+    const matchedKey = Object.keys(TRAINING_MAPPING).find(key => criteriaLabel.includes(key));
+    return matchedKey ? TRAINING_MAPPING[matchedKey] : ['برنامج تطوير الكفاءات التخصصية'];
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -269,44 +326,45 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
 
   return (
     <div id="employee-details-page" className="space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700" dir="rtl">
-      {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-muted bg-white/10 backdrop-blur-sm w-fit px-5 py-2 rounded-full border border-white/20 shadow-sm mb-8">
+      {/* Top Breadcrumbs & Quick Back */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+        <nav className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted bg-white px-5 py-3 rounded-[2rem] border border-border-theme shadow-sm">
+          <button 
+            onClick={() => navigate('/')} 
+            className="flex items-center gap-2 hover:text-primary transition-all hover:-translate-x-1"
+          >
+            <LayoutDashboard size={14} className="text-accent" />
+            Strategic
+          </button>
+          <ChevronLeft size={12} className="opacity-20 mx-1" />
+          <button 
+            onClick={() => navigate('/employees')} 
+            className="flex items-center gap-2 hover:text-primary transition-all hover:-translate-x-1"
+          >
+            <Users size={14} className="text-secondary" />
+            الكادر
+          </button>
+          <ChevronLeft size={12} className="opacity-20 mx-1" />
+          <span className="text-primary px-3 py-1 bg-primary/5 rounded-lg font-bold border border-primary/10">
+            {employee.name}
+          </span>
+        </nav>
+
         <button 
-          onClick={() => navigate('/')} 
-          className="flex items-center gap-1.5 hover:text-primary transition-colors hover:scale-105 active:scale-95"
+          onClick={() => navigate('/employees')}
+          className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 text-primary border border-border-theme rounded-[2rem] text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm hover:shadow-md group"
         >
-          <LayoutDashboard size={12} className="text-primary" />
-          لوحة التحكم
+          <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+          العودة لقائمة الموظفين
         </button>
-        <ChevronLeft size={10} className="opacity-30 mx-1" />
-        <button 
-          onClick={() => navigate('/employees')} 
-          className="flex items-center gap-1.5 hover:text-primary transition-colors hover:scale-105 active:scale-95"
-        >
-          <Users size={12} className="text-secondary" />
-          الموظفين
-        </button>
-        <ChevronLeft size={10} className="opacity-30 mx-1" />
-        <span className="text-primary flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-lg border border-primary/10 font-black">
-          <User size={12} />
-          {employee.name}
-        </span>
-      </nav>
+      </div>
 
       {/* Header Profile Section */}
-      <div className="bg-white rounded-3xl border border-border-theme shadow-lg overflow-hidden">
-        <div className="bg-primary p-8 text-white relative">
-          <div className="absolute top-0 left-0 w-64 h-full bg-accent/20 skew-x-[-20deg] origin-top translate-x-12 hidden lg:block" />
+      <div className="card-modern overflow-hidden relative glossy-mesh group">
+        <div className="bg-primary p-12 text-white relative">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-[120px] -translate-y-48 translate-x-48 pointer-events-none" />
           
-          <button 
-            onClick={() => navigate('/employees')}
-            className="absolute top-6 left-6 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all text-white border border-white/10 flex items-center justify-center"
-            title="العودة للقائمة"
-          >
-            <ArrowRight size={20} />
-          </button>
-
-          <div className="absolute top-6 right-6 flex flex-wrap justify-end gap-3 z-20">
+          <div className="absolute top-8 left-8 flex flex-wrap justify-end gap-3 z-30">
             <button 
               onClick={() => employee && onEditEmployee?.(employee)}
               className="flex items-center gap-2 px-6 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-black transition-all"
@@ -341,7 +399,7 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
 
           <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
             <div className="flex flex-col items-center gap-4">
-              <div className={`w-32 h-32 rounded-3xl flex items-center justify-center text-4xl font-black border-4 border-white/20 shadow-2xl relative ${
+              <div className={`w-32 h-32 rounded-[2.5rem] flex items-center justify-center text-4xl font-black border-4 border-white/20 shadow-2xl relative ${
                 latestEvaluation?.totalScore >= 90 ? 'bg-emerald-500' :
                 latestEvaluation?.totalScore >= 75 ? 'bg-blue-500' :
                 latestEvaluation?.totalScore >= 50 ? 'bg-amber-500' : 
@@ -358,30 +416,40 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
                   </span>
                 )}
               </div>
-              <button 
-                onClick={() => navigate('/employees')}
-                className="flex items-center gap-2 px-4 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-white/10"
-              >
-                <Users size={12} />
-                العودة لقائمة الموظفين
-              </button>
             </div>
 
             <div className="text-center md:text-right flex-1">
-              <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
-                <h2 className="text-3xl font-black">{employee.name}</h2>
+              <div className="flex items-center gap-3 mb-4">
+                 <h2 className="text-4xl font-black tracking-tighter">{employee.name}</h2>
+                 <button 
+                    onClick={() => navigate('/employees')}
+                    className="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all text-white border border-white/10"
+                    title="العودة للقائمة"
+                  >
+                    <ArrowLeftRight size={16} />
+                  </button>
+              </div>
+              <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-4">
                 <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
                   employee.type === 'technical' ? 'bg-[#e3f2fd] text-[#1565c0]' : 'bg-[#f3e5f5] text-[#7b1fa2]'
                 }`}>
                   {employee.type === 'technical' ? 'كادر فني' : 'كادر إداري'}
                 </span>
                 <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                  employee.category === 'consultant' ? 'bg-amber-100 text-amber-700' :
-                  employee.category === 'contractor' ? 'bg-slate-100 text-slate-700' : 'bg-emerald-100 text-emerald-700'
+                  employee.category === 'internal' ? 'bg-emerald-100 text-emerald-700' :
+                  employee.category === 'consultant' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'
                 }`}>
                   {employee.category === 'internal' ? 'موظف رسمي' : 
                    employee.category === 'consultant' ? 'مستشار خارجي' : 'متعاقد'}
                 </span>
+
+                {/* Biometric Status Badge */}
+                <div className={`px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2 border shadow-sm ${
+                  employee.biometricStatus === 'online' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'
+                }`}>
+                  <div className={`w-1.5 h-1.5 rounded-full ${employee.biometricStatus === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+                  {employee.biometricStatus === 'online' ? 'جهاز البصمة: متصل' : 'جهاز البصمة: غير متصل'}
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-6 text-white/80 font-bold text-sm">
                 <span className="flex items-center gap-2"><Briefcase size={16} className="text-accent" /> {employee.position}</span>
@@ -423,7 +491,7 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
         <div className="flex border-b border-border-theme overflow-x-auto no-scrollbar">
           <button 
             onClick={() => setActiveSubTab('info')}
-            className={`flex-1 min-w-[150px] py-4 font-black text-xs uppercase tracking-widest transition-all relative ${
+            className={`flex-1 min-w-[150px] py-4 font-bold text-xs uppercase tracking-widest transition-all relative ${
               activeSubTab === 'info' ? 'text-primary' : 'text-text-muted hover:bg-slate-50'
             }`}
           >
@@ -432,7 +500,7 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
           </button>
           <button 
             onClick={() => setActiveSubTab('history')}
-            className={`flex-1 min-w-[150px] py-4 font-black text-xs uppercase tracking-widest transition-all relative ${
+            className={`flex-1 min-w-[150px] py-4 font-bold text-xs uppercase tracking-widest transition-all relative ${
               activeSubTab === 'history' ? 'text-primary' : 'text-text-muted hover:bg-slate-50'
             }`}
           >
@@ -441,7 +509,7 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
           </button>
           <button 
             onClick={() => setActiveSubTab('compare')}
-            className={`flex-1 min-w-[150px] py-4 font-black text-xs uppercase tracking-widest transition-all relative ${
+            className={`flex-1 min-w-[150px] py-4 font-bold text-xs uppercase tracking-widest transition-all relative ${
               activeSubTab === 'compare' ? 'text-primary' : 'text-text-muted hover:bg-slate-50'
             }`}
           >
@@ -471,7 +539,7 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
                         <Award size={32} />
                       </div>
                       <div>
-                        <h4 className="text-xs font-black uppercase tracking-[0.2em] opacity-80 mb-1">ملخص آخر حالة تقييم</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-[0.2em] opacity-80 mb-1">ملخص آخر حالة تقييم</h4>
                         <div className="flex items-center gap-3">
                           <span className="text-3xl font-black">%{latestEvaluation.totalScore.toFixed(1)}</span>
                           <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/20 border border-white/30`}>
@@ -514,6 +582,33 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
                     <InfoCard label="المسمى الوظيفي" value={employee.position} icon={<Briefcase size={14} />} />
                     <InfoCard label="تاريخ الانضمام للوزارة" value={employee.joinDate} icon={<Calendar size={14} />} />
                     <InfoCard label="فئة الكادر" value={employee.type === 'technical' ? 'فني' : 'إداري'} icon={<Award size={14} />} />
+                    <InfoCard label="كود البصمة التحضيرية" value={employee.biometricId || 'غير مسجل'} icon={<Fingerprint size={14} />} />
+                    
+                    {/* New Biometric Status Cards */}
+                    <div className="bg-slate-50/50 p-5 rounded-2xl border border-border-theme flex items-center justify-between">
+                       <div>
+                          <div className="flex items-center gap-2 mb-1 text-[10px] font-black text-text-muted uppercase tracking-widest">
+                             <Wifi size={14} className="text-primary" />
+                             حالة الاتصال بالبصمة
+                          </div>
+                          <div className={`text-sm font-black ${employee.biometricStatus === 'online' ? 'text-emerald-600' : 'text-red-500'}`}>
+                             {employee.biometricStatus === 'online' ? 'مـتصل (Online)' : employee.biometricStatus === 'offline' ? 'غير متصل (Offline)' : 'غير معروف'}
+                          </div>
+                       </div>
+                       <div className={`w-3 h-3 rounded-full ${employee.biometricStatus === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+                    </div>
+
+                    <div className="bg-slate-50/50 p-5 rounded-2xl border border-border-theme">
+                       <div className="flex items-center gap-2 mb-1 text-[10px] font-black text-text-muted uppercase tracking-widest">
+                          <RefreshCw size={14} className="text-primary" />
+                          آخر عملية مزامنة
+                       </div>
+                       <div className="text-sm font-black text-text-dark">
+                          {employee.lastBiometricSync 
+                            ? new Date(employee.lastBiometricSync).toLocaleString('ar-YE', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) 
+                            : 'لم يتم المزامنة بعد'}
+                       </div>
+                    </div>
                   </div>
                 </div>
 
@@ -550,6 +645,23 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
                               <span className="text-xs font-bold text-text-dark">{latestEvaluation.discipline}</span>
                            </div>
                         </div>
+                        
+                        {/* Biometric Live Status Placeholder */}
+                        <div className="mt-6 p-4 bg-white rounded-2xl border border-border-theme flex items-center justify-between shadow-sm">
+                          <div className="flex items-center gap-3">
+                             <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary">
+                                <Fingerprint size={20} />
+                             </div>
+                             <div>
+                                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest leading-none mb-1">حالة البصمة الحالية</p>
+                                <p className="text-xs font-bold text-text-dark">مؤشر التحضير: <span className="text-emerald-600">منضبط</span> (08:05 ص)</p>
+                             </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100 text-[10px] font-black uppercase">
+                             <CheckCircle2 size={12} />
+                             مـتصل
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div className="p-8 text-center text-text-muted italic text-sm">
@@ -557,6 +669,147 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Attendance, Discipline & Notes Section */}
+                <div className="bg-slate-50 border border-border-theme rounded-3xl p-8 space-y-8">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border-theme pb-4">
+                     <div>
+                        <h3 className="text-sm font-black text-text-dark uppercase tracking-widest flex items-center gap-2">
+                           <Activity size={18} className="text-primary" /> تفاصيل الانضباط والملاحظات
+                        </h3>
+                        <p className="text-[10px] text-text-muted font-bold mt-1">تفاصيل السلوك الوظيفي بناءً على آخر تقييم معتمد</p>
+                     </div>
+                  </div>
+
+                  {latestEvaluation ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      <div className="space-y-4">
+                         <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">سجل الحضور</h4>
+                         <div className="bg-white p-6 rounded-2xl border border-border-theme flex flex-col items-center gap-3 shadow-sm">
+                            <Clock size={24} className="text-primary/40" />
+                            <AttendanceBadge status={latestEvaluation.attendance} showText />
+                            <p className="text-[10px] text-text-muted text-center font-bold">بناءً على سجلات البصمة والتحضير</p>
+                         </div>
+                      </div>
+
+                      <div className="space-y-4">
+                         <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">الالتزام المؤسسي</h4>
+                         <div className="bg-white p-6 rounded-2xl border border-border-theme flex flex-col items-center gap-3 shadow-sm">
+                            <ShieldCheck size={24} className="text-secondary/40" />
+                            <DisciplineBadge status={latestEvaluation.discipline} showText />
+                            <p className="text-[10px] text-text-muted text-center font-bold">مدى التقيد باللوائح والتعليمات</p>
+                         </div>
+                      </div>
+
+                      <div className="space-y-4">
+                         <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">ملاحظات التقييم الأخيرة</h4>
+                         <div className="bg-white p-6 rounded-2xl border border-border-theme min-h-[100px] shadow-sm relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-1 h-full bg-primary/20" />
+                            <p className="text-[11px] leading-relaxed italic text-text-dark">
+                               {latestEvaluation.notes || 'لا توجد ملاحظات إضافية مسجلة'}
+                            </p>
+                         </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-12 text-center text-text-muted italic text-sm">
+                       لا توجد بيانات انضباط مسجلة لعدم توفر تقييمات سابقة
+                    </div>
+                  )}
+                </div>
+
+                {/* Custom Criteria Section */}
+                <div className="bg-white border-2 border-slate-100 rounded-3xl p-8 space-y-6 shadow-sm">
+                   <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                      <div>
+                         <h3 className="text-sm font-black text-text-dark uppercase tracking-widest flex items-center gap-2">
+                           <Target size={18} className="text-accent" /> معايير التقييم المخصصة (Individualized)
+                         </h3>
+                         <p className="text-[10px] text-text-muted font-bold mt-1">تخصيص أهداف ومعايير محددة لهذا الموظف خارج النماذج العامة</p>
+                      </div>
+                      <button 
+                        onClick={() => setShowAddCustomCriterion(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-secondary transition-all shadow-lg shadow-primary/20"
+                      >
+                         <Plus size={14} /> إضافة معيار ديناميكي
+                      </button>
+                   </div>
+
+                   <AnimatePresence>
+                      {showAddCustomCriterion && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="bg-slate-50 p-6 rounded-2xl border border-primary/20 border-dashed mb-6"
+                        >
+                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                              <div className="space-y-2">
+                                 <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">مسمى المعيار</label>
+                                 <input 
+                                   type="text"
+                                   value={newCriterionLabel}
+                                   onChange={e => setNewCriterionLabel(e.target.value)}
+                                   placeholder="مثلاً: تطوير نظام الأرشفة..."
+                                   className="w-full px-4 py-2.5 bg-white border border-border-theme rounded-xl text-xs font-bold focus:border-primary outline-none transition-all"
+                                 />
+                              </div>
+                              <div className="space-y-2">
+                                 <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">الوزن النسبي (%)</label>
+                                 <input 
+                                   type="number"
+                                   value={newCriterionWeight}
+                                   onChange={e => setNewCriterionWeight(parseInt(e.target.value) || 0)}
+                                   className="w-full px-4 py-2.5 bg-white border border-border-theme rounded-xl text-xs font-bold focus:border-primary outline-none transition-all"
+                                 />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                 <button 
+                                   onClick={handleAddCustomCriterion}
+                                   className="flex-1 py-2.5 bg-secondary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 shadow-lg shadow-secondary/20"
+                                 >
+                                    تأكيد الإضافة
+                                 </button>
+                                 <button 
+                                   onClick={() => setShowAddCustomCriterion(false)}
+                                   className="p-2.5 bg-white border border-border-theme rounded-xl text-text-muted hover:text-red-500 transition-all"
+                                 >
+                                    <XCircle size={18} />
+                                 </button>
+                              </div>
+                           </div>
+                        </motion.div>
+                      )}
+                   </AnimatePresence>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {employee.customCriteria && employee.customCriteria.length > 0 ? (
+                        employee.customCriteria.map((c, idx) => (
+                           <div key={idx} className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 flex items-center justify-between group hover:border-primary/30 transition-all">
+                              <div className="flex items-center gap-3">
+                                 <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-accent shadow-sm border border-slate-100">
+                                    <Star size={14} />
+                                 </div>
+                                 <div className="min-w-0">
+                                    <p className="text-xs font-black text-text-dark truncate">{c.label}</p>
+                                    <p className="text-[9px] text-text-muted font-bold uppercase tracking-widest">وزن المعيار: {c.weight}%</p>
+                                 </div>
+                              </div>
+                              <button 
+                                onClick={() => handleRemoveCustomCriterion(idx)}
+                                className="p-2 opacity-0 group-hover:opacity-100 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                              >
+                                 <Trash2 size={14} />
+                              </button>
+                           </div>
+                        ))
+                      ) : (
+                        <div className="col-span-full py-8 text-center bg-slate-50 border border-dashed border-border-theme rounded-2xl text-text-muted text-[11px] italic font-bold">
+                           لم يتم إضافة أي معايير مخصصة لهذا الموظف حتى الآن. اضغط على الزر أعلاه للبدء.
+                        </div>
+                      )}
+                   </div>
                 </div>
               </div>
               </motion.div>
@@ -702,6 +955,107 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
                   </div>
                 </div>
 
+                {/* Performance Trend Charts */}
+                {evaluations.length > 1 && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    {/* Bar Chart (Current) */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-white border border-border-theme rounded-3xl p-6 shadow-sm overflow-hidden"
+                    >
+                      <div className="flex justify-between items-center mb-6">
+                        <div>
+                          <h3 className="text-sm font-black text-text-dark uppercase tracking-widest flex items-center gap-2">
+                              <Activity size={18} className="text-secondary" /> سجل نمو الأداء
+                          </h3>
+                          <p className="text-[10px] text-text-muted font-bold">تتبع تذبذب الدرجات الكلية عبر الدورات الزمنية</p>
+                        </div>
+                      </div>
+                      <div className="h-[200px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={[...filteredHistory].reverse()}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                              <XAxis 
+                                dataKey="date" 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{ fontSize: 9, fontWeight: 'bold' }} 
+                                dy={10}
+                              />
+                              <YAxis domain={[0, 100]} hide />
+                              <Tooltip 
+                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', direction: 'rtl' }}
+                                cursor={{ fill: '#f8fafc' }}
+                              />
+                              <Bar 
+                                dataKey="totalScore" 
+                                radius={[6, 6, 0, 0]} 
+                                barSize={40}
+                                animationDuration={1500}
+                              >
+                                  {[...filteredHistory].reverse().map((entry, index) => (
+                                    <Cell 
+                                      key={`cell-${index}`} 
+                                      fill={
+                                        entry.totalScore >= 90 ? '#10b981' :
+                                        entry.totalScore >= 75 ? '#3b82f6' :
+                                        entry.totalScore >= 50 ? '#f59e0b' : '#ef4444'
+                                      } 
+                                    />
+                                  ))}
+                              </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </motion.div>
+
+                    {/* New Line Chart (Last 5 Evaluations) */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="bg-white border border-border-theme rounded-3xl p-6 shadow-sm overflow-hidden"
+                    >
+                      <div className="flex justify-between items-center mb-6">
+                        <div>
+                          <h3 className="text-sm font-black text-text-dark uppercase tracking-widest flex items-center gap-2">
+                              <TrendingUp size={18} className="text-primary" /> مخطط استشراف الأداء (آخر 5 تقييمات)
+                          </h3>
+                          <p className="text-[10px] text-text-muted font-bold">تطور المنحنى البياني للأداء الوظيفي</p>
+                        </div>
+                      </div>
+                      <div className="h-[200px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={[...evaluations].reverse().slice(-5)}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                              <XAxis 
+                                dataKey="date" 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{ fontSize: 9, fontWeight: 'bold' }} 
+                                dy={10}
+                              />
+                              <YAxis domain={[0, 100]} hide />
+                              <Tooltip 
+                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', direction: 'rtl' }}
+                              />
+                              <Line 
+                                type="monotone" 
+                                dataKey="totalScore" 
+                                stroke="#1565c0" 
+                                strokeWidth={4}
+                                dot={{ r: 6, fill: '#1565c0', strokeWidth: 2, stroke: '#fff' }}
+                                activeDot={{ r: 8, fill: '#1565c0', strokeWidth: 0 }}
+                                animationDuration={2000}
+                              />
+                            </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+
                 {filteredHistory.length === 0 ? (
                   <div className="p-20 text-center border-2 border-dashed border-border-theme rounded-3xl">
                     <Search className="w-12 h-12 text-slate-200 mx-auto mb-4" />
@@ -846,6 +1200,103 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
                                                       {evalItem.notes || 'لا توجد ملاحظات مسجلة لهذا التقييم'}
                                                   </div>
                                                 </div>
+
+                                                <div className="lg:col-span-2 mt-4 space-y-6">
+                                                   <div className="h-px bg-slate-100" />
+                                                   <div>
+                                                      <h4 className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                                                         <Lightbulb size={14} /> التوصيات التدريبية والتحسين (Gap Analysis)
+                                                      </h4>
+                                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                         <div className="space-y-3">
+                                                            <p className="text-[9px] font-black text-text-muted uppercase tracking-widest pl-2">المعايير التي تحتاج تطوير (Score ≤ 3)</p>
+                                                            {evalItem.criteria.filter(c => c.score <= 3).length > 0 ? (
+                                                               evalItem.criteria.filter(c => c.score <= 3).map((c, i) => (
+                                                                  <div key={i} className="p-4 bg-red-50/30 border border-red-100 rounded-2xl flex flex-col gap-2">
+                                                                     <div className="flex justify-between items-center">
+                                                                        <span className="text-xs font-bold text-red-700">{c.label}</span>
+                                                                        <span className="text-[10px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full">{c.score} / 5</span>
+                                                                     </div>
+                                                                     <div className="flex flex-wrap gap-2 mt-1">
+                                                                        {getSuggestedTraining(c.label).map((t, ti) => (
+                                                                           <span key={ti} className="text-[9px] font-bold bg-white text-primary border border-primary/10 px-2 py-1 rounded-lg">
+                                                                              {t}
+                                                                           </span>
+                                                                        ))}
+                                                                     </div>
+                                                                  </div>
+                                                               ))
+                                                            ) : (
+                                                               <div className="p-4 bg-emerald-50/30 border border-emerald-100 rounded-2xl text-[10px] text-emerald-700 font-bold italic">
+                                                                  كافة المعايير ضمن النطاق المقبول. لا توجد فجوات مهارية حرجة.
+                                                               </div>
+                                                            )}
+                                                         </div>
+                                                         <div className="space-y-4">
+                                                            <p className="text-[9px] font-black text-text-muted uppercase tracking-widest pl-2">الاحتياجات التدريبية المسجلة يدوياً</p>
+                                                            <div className="flex flex-wrap gap-2">
+                                                               {evalItem.trainingNeeds && evalItem.trainingNeeds.length > 0 ? (
+                                                                  evalItem.trainingNeeds.map((need, i) => (
+                                                                     <div key={i} className="px-4 py-3 bg-primary/5 border border-primary/20 rounded-xl text-[11px] font-bold text-primary flex items-center gap-2">
+                                                                        <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                                                                        {need}
+                                                                     </div>
+                                                                  ))
+                                                               ) : (
+                                                                  <p className="text-[10px] text-text-muted italic p-2">لم يتم تسجيل احتياجات تدريبية إضافية.</p>
+                                                               )}
+                                                            </div>
+                                                         </div>
+                                                      </div>
+                                                   </div>
+                                                </div>
+                                            </div>
+
+                                            {/* AI Smart Summary Section */}
+                                            <div className="lg:col-span-2 mt-8 p-8 bg-slate-50 rounded-3xl border border-secondary/10 relative overflow-hidden">
+                                               <div className="absolute -top-10 -left-10 w-40 h-40 bg-secondary/5 rounded-full blur-3xl" />
+                                               <div className="relative z-10">
+                                                  <h4 className="text-sm font-black text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
+                                                     <div className="p-1.5 bg-secondary text-white rounded-lg">
+                                                        <Lightbulb size={16} />
+                                                     </div>
+                                                     ملخص التحليل الذكي (AI Insight Summary)
+                                                  </h4>
+                                                  
+                                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-right" dir="rtl">
+                                                     <div className="space-y-4">
+                                                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
+                                                           <CheckCircle2 size={14} /> أبرز النتائج والتفوق
+                                                        </p>
+                                                        <ul className="space-y-3">
+                                                           <li className="flex items-start gap-2 text-[11px] font-bold text-text-dark">
+                                                              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 shrink-0" />
+                                                              ثبات عالي في دقة المخرجات والالتزام بالمعايير المؤسسية للوزارة.
+                                                           </li>
+                                                           <li className="flex items-start gap-2 text-[11px] font-bold text-text-dark">
+                                                              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 shrink-0" />
+                                                              تميز ملحوظ في التعامل مع المهام المعقدة التي تتطلب تركيزاً تقنياً عالياً.
+                                                           </li>
+                                                        </ul>
+                                                     </div>
+                                                     
+                                                     <div className="space-y-4">
+                                                        <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-2">
+                                                           <AlertCircle size={14} /> التوصيات المقترحة للنمو
+                                                        </p>
+                                                        <ul className="space-y-3">
+                                                           <li className="flex items-start gap-2 text-[11px] font-bold text-text-dark">
+                                                              <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1.5 shrink-0" />
+                                                              المشاركة في برامج تطوير مهارات الصيانة الوقائية والأنظمة الحديثة.
+                                                           </li>
+                                                           <li className="flex items-start gap-2 text-[11px] font-bold text-text-dark">
+                                                              <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1.5 shrink-0" />
+                                                              تعزيز الروح القيادية من خلال تولي مهام تنسيقية صغيرة مع فريق العمل.
+                                                           </li>
+                                                        </ul>
+                                                     </div>
+                                                  </div>
+                                               </div>
                                             </div>
 
                                             {evalItem.aiAnalysis && (
@@ -894,7 +1345,7 @@ function StatBox({ icon, label, value }: { icon: any, label: string, value: stri
         {React.cloneElement(icon as React.ReactElement<any>, { size: 24 })}
       </div>
       <div>
-        <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">{label}</p>
         <p className="text-2xl font-black text-text-dark">{value}</p>
       </div>
     </div>
@@ -924,14 +1375,17 @@ function SummaryItem({ label, value }: { label: string, value: string }) {
 
 function AttendanceBadge({ status, showText = false }: { status: Evaluation['attendance'], showText?: boolean }) {
   const configs = {
-    excellent: { color: 'text-emerald-500 bg-emerald-50 border-emerald-100', icon: <CheckCircle2 size={14} />, label: 'ممتاز' },
-    good: { color: 'text-blue-500 bg-blue-50 border-blue-100', icon: <Clock size={14} />, label: 'جيد' },
-    average: { color: 'text-amber-500 bg-amber-50 border-amber-100', icon: <AlertCircle size={14} />, label: 'متوسط' },
-    poor: { color: 'text-red-500 bg-red-50 border-red-100', icon: <XCircle size={14} />, label: 'ضعيف' },
+    excellent: { color: 'text-emerald-500 bg-emerald-50 border-emerald-100', icon: <CheckCircle2 size={16} />, label: 'ممتاز' },
+    good: { color: 'text-blue-500 bg-blue-50 border-blue-100', icon: <Clock size={16} />, label: 'جيد' },
+    average: { color: 'text-amber-500 bg-amber-50 border-amber-100', icon: <AlertCircle size={16} />, label: 'متوسط' },
+    poor: { color: 'text-red-500 bg-red-50 border-red-100', icon: <XCircle size={16} />, label: 'ضعيف' },
   };
   const config = configs[status];
   return (
-    <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-black uppercase tracking-tighter ${config.color}`}>
+    <div 
+      className={`flex items-center gap-2 ${showText ? 'px-3 py-1.5 rounded-xl border' : 'w-9 h-9 rounded-full justify-center shadow-sm border-2'} text-[10px] font-bold uppercase tracking-tighter transition-all hover:scale-110 ${config.color}`}
+      title={config.label}
+    >
       {config.icon}
       {showText && config.label}
     </div>
@@ -940,13 +1394,16 @@ function AttendanceBadge({ status, showText = false }: { status: Evaluation['att
 
 function DisciplineBadge({ status, showText = false }: { status: Evaluation['discipline'], showText?: boolean }) {
   const configs = {
-    committed: { color: 'text-emerald-500 bg-emerald-50 border-emerald-100', icon: <CheckCircle2 size={14} />, label: 'منضبط' },
-    'needs-improvement': { color: 'text-amber-500 bg-amber-50 border-amber-100', icon: <AlertCircle size={14} />, label: 'يحتاج تحسين' },
-    warning: { color: 'text-red-500 bg-red-50 border-red-100', icon: <XCircle size={14} />, label: 'إنذار' },
+    committed: { color: 'text-emerald-500 bg-emerald-50 border-emerald-100', icon: <CheckCircle2 size={16} />, label: 'منضبط' },
+    'needs-improvement': { color: 'text-amber-500 bg-amber-50 border-amber-100', icon: <AlertCircle size={16} />, label: 'يحتاج تحسين' },
+    warning: { color: 'text-red-500 bg-red-50 border-red-100', icon: <XCircle size={16} />, label: 'إنذار' },
   };
   const config = configs[status];
   return (
-    <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-black uppercase tracking-tighter ${config.color}`}>
+    <div 
+      className={`flex items-center gap-2 ${showText ? 'px-3 py-1.5 rounded-xl border' : 'w-9 h-9 rounded-full justify-center shadow-sm border-2'} text-[10px] font-bold uppercase tracking-tighter transition-all hover:scale-110 ${config.color}`}
+      title={config.label}
+    >
       {config.icon}
       {showText && config.label}
     </div>

@@ -47,15 +47,28 @@ export default function EvaluationForm({ employee, onClose, onSuccess }: Evaluat
       const models = await db.evaluationModels.toArray();
       setAvailableModels(models);
 
-      // Auto-select model based on position/dept tags
-      const bestMatch = models.find(m => 
-        m.positionTags.some(tag => employee.position.includes(tag)) ||
-        m.departmentTags.some(tag => employee.department.includes(tag))
-      );
+      // Auto-select model based on multiple attributes (best score wins)
+      const rankedModels = models.map(m => {
+        let score = 0;
+        if (m.positionTags.some(tag => employee.position.includes(tag))) score += 10;
+        if (m.departmentTags.some(tag => employee.department.includes(tag))) score += 5;
+        if (m.typeTags?.some(tag => employee.type === tag)) score += 3;
+        if (m.categoryTags?.some(tag => employee.category === tag)) score += 2;
+        return { model: m, score };
+      }).filter(item => item.score > 0)
+        .sort((a, b) => b.score - a.score);
 
+      const bestMatch = rankedModels.length > 0 ? rankedModels[0].model : null;
+
+      let initialCriteria: EvaluationCriteria[] = [];
       if (bestMatch) {
         setSelectedModelId(bestMatch.id!);
-        setCriteria(bestMatch.criteria.map(c => ({ label: c.label, weight: c.weight, score: 5 })));
+        initialCriteria = bestMatch.criteria.map(c => ({ 
+          label: c.label, 
+          weight: c.weight, 
+          score: 5,
+          description: c.description
+        }));
       } else {
         // Fallback to legacy behavior if no model matches
         const base = employee.type === 'technical' ? [
@@ -71,8 +84,21 @@ export default function EvaluationForm({ employee, onClose, onSuccess }: Evaluat
           { label: 'الانضباط والمواظبة', weight: 20 },
           { label: 'المبادرة والتعاون', weight: 20 },
         ];
-        setCriteria(base.map(c => ({ ...c, score: 5 })));
+        initialCriteria = base.map(c => ({ ...c, score: 5 }));
       }
+
+      // Merge individualized custom criteria from employee object
+      if (employee.customCriteria && employee.customCriteria.length > 0) {
+        const empCustom = employee.customCriteria.map(c => ({
+          label: c.label,
+          weight: c.weight,
+          score: 5,
+          description: c.description
+        }));
+        initialCriteria = [...initialCriteria, ...empCustom];
+      }
+
+      setCriteria(initialCriteria);
     };
     fetchModels();
   }, [employee]);
@@ -81,7 +107,12 @@ export default function EvaluationForm({ employee, onClose, onSuccess }: Evaluat
     const model = availableModels.find(m => m.id === modelId);
     if (model) {
       setSelectedModelId(modelId);
-      setCriteria(model.criteria.map(c => ({ label: c.label, weight: c.weight, score: 5 })));
+      setCriteria(model.criteria.map(c => ({ 
+        label: c.label, 
+        weight: c.weight, 
+        score: 5,
+        description: c.description
+      })));
     }
   };
 
@@ -172,6 +203,16 @@ export default function EvaluationForm({ employee, onClose, onSuccess }: Evaluat
       setNewModelName('');
     } catch (err) {
       console.error("Failed to save model:", err);
+      let errorMsg = "حدث خطأ غير متوقع أثناء حفظ النموذج";
+      if (err instanceof Error) {
+        if (err.name === 'ConstraintError') {
+          errorMsg = "فشل الحفظ: يوجد نموذج آخر بنفس الاسم";
+        } else {
+          errorMsg = `فشل حفظ النموذج: ${err.message}`;
+        }
+      }
+      setError(errorMsg);
+      setShowSaveModel(false);
     }
   };
 
@@ -225,7 +266,7 @@ export default function EvaluationForm({ employee, onClose, onSuccess }: Evaluat
       
       const avgScore = previous.length >= 2 
         ? previous.reduce((acc, curr) => acc + curr.totalScore, 0) / previous.length 
-        : totalScore; // If no previous or only one, we can't really call it a "drop" easily, but let's assume no drop
+        : totalScore; 
 
       const isDrasticDrop = previous.length >= 2 && totalScore < avgScore * 0.85;
 
@@ -234,8 +275,19 @@ export default function EvaluationForm({ employee, onClose, onSuccess }: Evaluat
       onClose();
     } catch (err) {
       console.error("Failed to save evaluation:", err);
-      const errorMsg = err instanceof Error ? err.message : "حدث خطأ غير معروف";
-      setError(`فشل حفظ التقييم: ${errorMsg}`);
+      let errorMsg = "حدث خطأ غير متوقع أثناء حفظ التقييم";
+      
+      if (err instanceof Error) {
+        if (err.name === 'QuotaExceededError') {
+          errorMsg = "فشل الحفظ: لا توجد مساحة تخزينية كافية في المتصفح";
+        } else if (err.name === 'DataError') {
+          errorMsg = "فشل الحفظ: بيانات التقييم غير صالحة";
+        } else {
+          errorMsg = `فشل حفظ التقييم: ${err.message}`;
+        }
+      }
+      
+      setError(errorMsg);
       setShowConfirm(false);
     }
   };
@@ -404,6 +456,11 @@ export default function EvaluationForm({ employee, onClose, onSuccess }: Evaluat
                                          placeholder="مسمى المعيار (مثلاً: جودة الإنتاجية)..."
                                          onChange={(e) => updateCriterion(i, { label: e.target.value })}
                                        />
+                                       {c.description && (
+                                         <p className="text-[10px] text-text-muted italic pr-6 pb-2">
+                                           {c.description}
+                                         </p>
+                                       )}
                                        <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-border-theme">
                                          <span className="text-[9px] font-black text-text-muted uppercase">الوزن</span>
                                          <input 

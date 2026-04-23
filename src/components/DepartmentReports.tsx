@@ -18,7 +18,12 @@ import {
   ArrowRight,
   Filter,
   ArrowUpDown,
-  Download
+  Download,
+  AlertTriangle,
+  Clock,
+  ShieldAlert,
+  Search,
+  BookOpen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -29,6 +34,7 @@ export default function DepartmentReports() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [sortBy, setSortBy] = useState<'name' | 'staffCount' | 'score' | 'rate'>('score');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -39,6 +45,24 @@ export default function DepartmentReports() {
     };
     loadData();
   }, []);
+
+  const alertEmployees = useMemo(() => {
+    return employees.filter(emp => {
+      const empEvals = evaluations.filter(e => e.employeeId === emp.id);
+      if (empEvals.length === 0) return false;
+      
+      const lastEval = [...empEvals].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+      
+      const lowAttendance = ['poor', 'average'].includes(lastEval.attendance);
+      const lowDiscipline = ['needs-improvement', 'warning'].includes(lastEval.discipline);
+      
+      return lowAttendance || lowDiscipline;
+    }).map(emp => {
+      const empEvals = evaluations.filter(e => e.employeeId === emp.id);
+      const lastEval = [...empEvals].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+      return { ...emp, lastEval };
+    });
+  }, [employees, evaluations]);
 
   const CATEGORIES = {
     'القيادة والدعم': [
@@ -180,7 +204,7 @@ export default function DepartmentReports() {
 
   return (
     <div className="space-y-12 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="bg-white rounded-2xl border border-border-theme shadow-sm overflow-hidden">
+      <div className="bg-white rounded-[2.5rem] border border-border-theme shadow-sm overflow-hidden">
         <div className="p-8 border-b-4 border-accent bg-primary text-white">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-white/10 rounded-xl">
@@ -262,6 +286,81 @@ export default function DepartmentReports() {
             <Download size={14} /> تصدير CSV
           </button>
         </div>
+      </div>
+
+      {/* Alerts & Training Needs Section */}
+      <div className="bg-red-50/50 border border-red-100 rounded-[2.5rem] p-8 mb-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <h3 className="text-sm font-bold text-red-600 uppercase tracking-widest flex items-center gap-2">
+              <ShieldAlert size={20} /> تقرير التنبيهات والاحتياجات التدريبية
+            </h3>
+            <p className="text-[10px] text-red-600/70 font-bold mt-1 uppercase">حصر الكادر ذوي الأداء المنخفض في الانضباط أو الحضور</p>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-red-100 shadow-sm">
+             <AlertTriangle size={14} className="text-red-500" />
+             <span className="text-[11px] font-black text-red-600">إجمالي التنبيهات: {alertEmployees.length}</span>
+          </div>
+        </div>
+
+        {alertEmployees.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4">
+            {alertEmployees.map(emp => (
+              <motion.div 
+                key={emp.id}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                className="bg-white rounded-2xl p-6 border border-red-100 shadow-sm flex flex-col lg:flex-row items-center gap-6"
+              >
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center font-black uppercase">
+                    {emp.name[0]}
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-black text-text-dark">{emp.name}</h4>
+                    <p className="text-[10px] text-text-muted font-bold uppercase truncate">{emp.position} - {emp.department}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="px-4 py-2 bg-slate-50 rounded-xl border border-border-theme text-center min-w-[120px]">
+                    <p className="text-[8px] font-black text-text-muted uppercase mb-1">حالة الحضور</p>
+                    <p className={`text-[10px] font-black ${['poor', 'average'].includes(emp.lastEval.attendance) ? 'text-red-600' : 'text-emerald-600'}`}>
+                      {emp.lastEval.attendance === 'poor' ? 'تحذير (ضعيف)' : emp.lastEval.attendance === 'average' ? 'يحتاج تحسين' : emp.lastEval.attendance}
+                    </p>
+                  </div>
+                  <div className="px-4 py-2 bg-slate-50 rounded-xl border border-border-theme text-center min-w-[120px]">
+                    <p className="text-[8px] font-black text-text-muted uppercase mb-1">الالتزام السلوكي</p>
+                    <p className={`text-[10px] font-black ${['warning', 'needs-improvement'].includes(emp.lastEval.discipline) ? 'text-red-600' : 'text-emerald-600'}`}>
+                      {emp.lastEval.discipline === 'warning' ? 'تحذير إداري' : emp.lastEval.discipline === 'needs-improvement' ? 'يحتاج تحسين' : emp.lastEval.discipline}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="w-full lg:w-1/3 bg-amber-50/50 p-4 rounded-xl border border-amber-100">
+                  <p className="text-[9px] font-black text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <BookOpen size={12} /> الاحتياجات التدريبية المقترحة
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {emp.lastEval.trainingNeeds && emp.lastEval.trainingNeeds.length > 0 ? (
+                      emp.lastEval.trainingNeeds.map((need: string, i: number) => (
+                        <span key={i} className="px-2 py-0.5 bg-white text-amber-700 text-[9px] font-bold rounded-md border border-amber-200">
+                          {need}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-[9px] text-amber-600 italic">بانتظار تحديد المسار التدريبي</span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-12 text-center bg-white/50 rounded-2xl border border-dashed border-red-200">
+             <p className="text-sm text-red-400 font-bold italic">لا توجد تنبيهات نشطة حالياً. كافة الكادر ضمن مستويات الأداء المطلوبة.</p>
+          </div>
+        )}
       </div>
 
       {Object.entries(departmentData).map(([category, depts]) => (

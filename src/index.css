@@ -1,38 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Vazirmatn", "Inter", system-ui, sans-serif;
   
-  --color-primary: #0f172a; /* Deep Slate */
-  --color-secondary: #1e293b;
-  --color-accent: #f59e0b; /* Amber 500 */
-  --color-bg-theme: #f8fafc; /* Slate 50 */
-  --color-card-bg: #ffffff;
+  /* Next-Gen Ministry Palette */
+  --color-primary: #050a14; /* Deepest Midnight */
+  --color-secondary: #0a1122;
+  --color-accent: #d4af37; /* Metallic Gold */
+  --color-bg-theme: #fcfcfd; 
+  --color-card-bg: rgba(255, 255, 255, 0.8);
   --color-text-dark: #0f172a;
   --color-text-muted: #64748b;
-  --color-border-theme: #e2e8f0;
+  --color-border-theme: rgba(226, 232, 240, 0.7);
+  
+  --shadow-modern: 0 4px 20px -10px rgba(0, 0, 0, 0.05);
+  --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
 }
 
 @layer base {
   body {
-    @apply bg-bg-theme text-text-dark;
+    @apply bg-bg-theme text-text-dark selection:bg-accent/20 selection:text-primary;
     direction: rtl;
     text-align: right;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-family: var(--font-sans);
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.03) 0, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(5, 10, 20, 0.02) 0, transparent 50%),
+      radial-gradient(at 50% 100%, rgba(212, 175, 55, 0.02) 0, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3 {
+    @apply font-black tracking-tight leading-tight;
+  }
+  
+  h4, h5, h6 {
+    @apply font-bold tracking-tight leading-tight;
   }
 }
 
 .glass {
-  @apply bg-white/70 backdrop-blur-md border border-white/20;
+  @apply bg-white/40 backdrop-blur-3xl border border-white/60 shadow-modern;
 }
 
-.sidebar-gradient {
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+.card-modern {
+  @apply bg-white/80 backdrop-blur-xl rounded-[2.5rem] border border-border-theme shadow-modern transition-all duration-500 hover:shadow-premium hover:-translate-y-1;
+}
+
+.text-label {
+  @apply text-[11px] font-bold text-text-dark uppercase tracking-[0.2em] opacity-70;
+}
+
+.text-value {
+  @apply text-sm font-medium text-text-dark leading-relaxed;
+}
+
+.text-body {
+  @apply text-base font-normal text-text-muted leading-relaxed;
+}
+
+.btn-modern {
+  @apply px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+}
+
+.btn-primary {
+  @apply bg-primary text-white shadow-2xl shadow-primary/20 hover:bg-black hover:shadow-primary/40;
+}
+
+.btn-accent {
+  @apply bg-accent text-primary shadow-2xl shadow-accent/20 hover:scale-105;
+}
+
+.sidebar-glass {
+  @apply bg-primary/95 backdrop-blur-2xl border-l border-white/5 shadow-2xl;
+}
+
+.glossy-mesh {
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(5, 10, 20, 0.05) 0%, transparent 40%);
 }
 
 .active-nav-bg {
-  background: linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, transparent 100%);
+  @apply bg-accent/10 border-r-4 border-accent;
+}
+
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-shine::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(197, 160, 89, 0.03), transparent);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+.ai-gradient {
+  background: linear-gradient(135deg, #0a192f 0%, #112240 50%, #c5a059 100%);
+}
+
+.slant-shine {
+  transform: skewX(-20deg);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full hover:bg-slate-300;
+}
+
+.ai-markdown-container p {
+  @apply mb-4 leading-relaxed;
+}
+
+.ai-markdown-container h3 {
+  @apply text-lg font-black text-primary mt-6 mb-3;
+}
+
+.ai-markdown-container ul {
+  @apply list-disc list-inside space-y-2 mb-4;
+}
+
+.ai-markdown-container li {
+  @apply pr-2;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -41,4 +145,9 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Custom transitions */
+.page-transition {
+  @apply transition-all duration-500 ease-in-out;
 }

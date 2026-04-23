@@ -19,6 +19,7 @@ import {
   Bell, 
   UserCircle, 
   Globe,
+  LayoutGrid,
   LayoutDashboard,
   ClipboardList,
   Plus,
@@ -27,7 +28,10 @@ import {
   ArrowLeft,
   TrendingUp,
   Award,
-  AlertTriangle
+  AlertTriangle,
+  Contact2,
+  BrainCircuit,
+  PieChart
 } from 'lucide-react';
 import Dashboard from './components/Dashboard.tsx';
 import EmployeeForm from './components/EmployeeForm.tsx';
@@ -87,9 +91,11 @@ export default function App() {
       const empCount = await db.employees.count();
       if (empCount === 0) {
         const demoEmployees: Employee[] = [
-          { name: 'أحمد محمد علي', employeeId: 'MET-1001', department: 'ادارة العلاقات العامة والإعلام', position: 'مدير مكتب', type: 'non-technical', category: 'internal', joinDate: '2023-01-15' },
-          { name: 'سارة خالد عبدالله', employeeId: 'MET-1002', department: 'المكتب الفني', position: 'مهندس اتصالات', type: 'technical', category: 'internal', joinDate: '2023-05-20' },
-          { name: 'فؤاد سالم حسن', employeeId: 'MET-1003', department: 'ادارة الموافقة النوعية', position: 'محلل بيانات', type: 'technical', category: 'contractor', joinDate: '2024-02-10' },
+          { name: 'أحمد محمد علي', employeeId: 'MET-1001', biometricId: 'BIO-5501', department: 'ادارة العلاقات العامة والإعلام', position: 'مدير مكتب', type: 'non-technical', category: 'internal', joinDate: '2023-01-15' },
+          { name: 'سارة خالد عبدالله', employeeId: 'MET-1002', biometricId: 'BIO-5502', department: 'المكتب الفني', position: 'مهندس اتصالات', type: 'technical', category: 'internal', joinDate: '2023-05-20' },
+          { name: 'فؤاد سالم حسن', employeeId: 'MET-1003', biometricId: 'BIO-5503', department: 'ادارة الموافقة النوعية', position: 'محلل بيانات', type: 'technical', category: 'contractor', joinDate: '2024-02-10' },
+          { name: 'ليلى محمد حسن', employeeId: 'MET-1004', biometricId: 'BIO-5504', department: 'الشؤون القانونية', position: 'باحث قانوني', type: 'non-technical', category: 'internal', joinDate: '2022-11-05' },
+          { name: 'ياسين منصور علي', employeeId: 'MET-1005', biometricId: 'BIO-5505', department: 'الشؤون المالية', position: 'محاسب أول', type: 'non-technical', category: 'internal', joinDate: '2024-01-02' },
         ];
         
         const empIds = await db.employees.bulkAdd(demoEmployees, { allKeys: true });
@@ -109,6 +115,65 @@ export default function App() {
         await db.evaluations.bulkAdd(demoEvaluations);
       }
 
+      // One-time update requested by user
+      const hasUpdated = localStorage.getItem('ministry_v1_updates');
+      if (!hasUpdated) {
+        try {
+          // Add biometricId to existing employees
+          const allEmps = await db.employees.toArray();
+          for (const emp of allEmps) {
+            if (!emp.biometricId) {
+              const randomBio = Math.floor(1000 + Math.random() * 9000).toString();
+              await db.employees.update(emp.id!, { biometricId: `BIO-${randomBio}` });
+            }
+          }
+
+          // 1. Update evaluation ID 1 notes
+          const eval1 = await db.evaluations.get(1);
+          if (eval1) {
+            await db.evaluations.update(1, { 
+              notes: 'The employee shows great potential for leadership and has consistently exceeded expectations in project management tasks.' 
+            });
+          }
+
+          // 2. Create new evaluation for 'أحمد محمد علي'
+          const ahmad = await db.employees.where('name').equals('أحمد محمد علي').first();
+          if (ahmad && ahmad.id) {
+            const now = new Date();
+            const ahmadEval = {
+              employeeId: ahmad.id,
+              period: 'monthly' as const,
+              date: now.toISOString().split('T')[0],
+              year: now.getFullYear(),
+              month: now.getMonth() + 1,
+              totalScore: 95,
+              attendance: 'excellent' as const,
+              discipline: 'committed' as const,
+              notes: 'تقييم ممتاز تم إنشاؤه بناءً على طلب النظام.',
+              trainingNeeds: [],
+              criteria: [
+                { label: 'Technical Skills', weight: 50, score: 5 },
+                { label: 'Communication Skills', weight: 50, score: 4 }
+              ]
+            };
+            
+            // Check if this eval already exists to prevent duplicates (e.g. same score/date)
+            const existing = await db.evaluations
+              .where('employeeId').equals(ahmad.id)
+              .filter(e => e.totalScore === 95 && e.month === ahmadEval.month)
+              .first();
+            
+            if (!existing) {
+              await db.evaluations.add(ahmadEval);
+            }
+          }
+
+          localStorage.setItem('ministry_v1_updates', 'true');
+        } catch (e) {
+          console.error("Migration failed:", e);
+        }
+      }
+      
       // Seed Evaluation Models
       const modelCount = await db.evaluationModels.count();
       if (modelCount === 0) {
@@ -117,6 +182,7 @@ export default function App() {
             name: 'نموذج المهندسين والتقنيين',
             positionTags: ['مهندس', 'تقني', 'محلل بيانات', 'برمجيات'],
             departmentTags: ['المكتب الفني', 'نظم المعلومات', 'الاتصالات'],
+            typeTags: ['technical'],
             criteria: [
               { label: 'الدقة التقنية وجودة المخرجات', weight: 30, description: 'مدى سلامة الحلول التقنية المطبقة' },
               { label: 'السرعة في الإنجاز وحل الأعطال', weight: 25, description: 'الزمن المستغرق لمعالجة الطلبات' },
@@ -137,13 +203,86 @@ export default function App() {
           },
           {
             name: 'نموذج الإداريين والسكرتارية',
-            positionTags: ['إداري', 'سكرتير', 'منسق'],
-            departmentTags: ['العلاقات العامة', 'الموارد البشرية'],
+            positionTags: ['إداري', 'سكرتير', 'منسق', 'كاتب'],
+            departmentTags: ['العلاقات العامة', 'الموارد البشرية', 'السكرتارية'],
+            typeTags: ['non-technical'],
             criteria: [
               { label: 'الدقة في المراسلات والأرشفة', weight: 30, description: 'جودة وتنظيم العمل المكتبي' },
               { label: 'التواصل الفعال مع الجمهور', weight: 20, description: 'لباقة التعامل' },
               { label: 'سرعة الاستجابة للطلبات الإدارية', weight: 25, description: 'كفاءة التنفيذ' },
               { label: 'الالتزام الكامل باللوائح المنظمة', weight: 25, description: 'الانضباط المؤسسي' }
+            ]
+          },
+          {
+            name: 'نموذج الإدارة القانونية',
+            positionTags: ['قانوني', 'محام', 'مستشار', 'باحث قانوني'],
+            departmentTags: ['الشؤون القانونية', 'القانونية'],
+            typeTags: ['non-technical'],
+            criteria: [
+              { label: 'دقة الصياغة القانونية والبحث', weight: 30, description: 'جودة مخرجات البحث القانوني وصياغة العقود' },
+              { label: 'الالتزام بالحقوق القانونية والمواعيد', weight: 25, description: 'احترام المهل القانونية للرد' },
+              { label: 'جودة إدارة القضايا والنزاعات', weight: 25, description: 'كفاءة التعامل مع الملفات القضائية' },
+              { label: 'سرية المعلومات والأمانة المهنية', weight: 20, description: 'الحفاظ على سرية ملفات الوزارة' }
+            ]
+          },
+          {
+            name: 'نموذج الإدارة المالية والمحاسبية',
+            positionTags: ['محاسب', 'مالي', 'مدقق', 'مراقب'],
+            departmentTags: ['الشؤون المالية', 'الحسابات', 'المراجعة'],
+            typeTags: ['non-technical'],
+            criteria: [
+              { label: 'دقة معالجة العمليات المالية', weight: 30, description: 'خلو البيانات من الأخطاء المحاسبية' },
+              { label: 'الالتزام باللوائح والاعتمادات المالية', weight: 25, description: 'اتباع الدورة المستندية والأنظمة المالية' },
+              { label: 'كفاءة إعداد التقارير والموازنات', weight: 25, description: 'وضوح وشمولية التقارير الدورية' },
+              { label: 'النزاهة والرقابة الذاتية', weight: 20, description: 'الحرص على المال العام' }
+            ]
+          },
+          {
+            name: 'نموذج الرقابة الإدارية والتفتيش',
+            positionTags: ['مفتش', 'رقابي', 'تدقيق إداري', 'جودة'],
+            departmentTags: ['الرقابة', 'التفتيش', 'الجودة'],
+            typeTags: ['non-technical'],
+            criteria: [
+              { label: 'الدقة في رصد المخالفات', weight: 30, description: 'مدى شمولية ودقة التقارير الرقابية' },
+              { label: 'الحيادية والموضوعية', weight: 25, description: 'الالتزام بالمعايير المهنية دون تحيز' },
+              { label: 'جودة التوصيات التصحيحية', weight: 25, description: 'واقعية الحلول المقترحة للمشاكل' },
+              { label: 'السرية والنزاهة المهنية', weight: 20, description: 'الحفاظ على سرية المعلومات الرقابية' }
+            ]
+          },
+          {
+            name: 'نموذج الأمن والحراسات',
+            positionTags: ['حارس', 'أمن', 'مشرف أمن', 'سلامة'],
+            departmentTags: ['الأمن', 'الحراسات', 'السلامة'],
+            typeTags: ['non-technical'],
+            criteria: [
+              { label: 'اليقظة وسرعة الاستجابة', weight: 30, description: 'القدرة على التعامل مع الأحداث الطارئة' },
+              { label: 'الالتزام بنظام النوبات', weight: 25, description: 'الدقة في مواعيد الاستلام والتسليم' },
+              { label: 'التعامل مع الجمهور والزوار', weight: 25, description: 'اللباقة والاحترافية في التعامل' },
+              { label: 'الالتزام بتعليمات السلامة', weight: 20, description: 'تطبيق قواعد الأمن والسلامة المهنية' }
+            ]
+          },
+          {
+            name: 'نموذج الخدمات العامة (النظافة)',
+            positionTags: ['عامل', 'نظافة', 'خدمات'],
+            departmentTags: ['الخدمات العامة', 'الصيانة'],
+            typeTags: ['non-technical'],
+            criteria: [
+              { label: 'جودة التنظيف والترتيب', weight: 30, description: 'مستوى نظافة المواقع المسؤولة' },
+              { label: 'سرعة تنفيذ المهام اليومية', weight: 25, description: 'إنجاز العمل في الوقت المحدد' },
+              { label: 'المحافظة على الممتلكات', weight: 25, description: 'الحرص على أدوات العمل والمعدات' },
+              { label: 'المظهر العام والانضباط', weight: 20, description: 'الالتزام بالزي الرسمي وقواعد السلوك' }
+            ]
+          },
+          {
+            name: 'نموذج إدارة المستخدمين والدعم الإداري',
+            positionTags: ['إدارة مستخدمين', 'أخصائي قاعدة بيانات', 'دعم فني إداري', 'صلاحيات'],
+            departmentTags: ['نظم المعلومات', 'الأمن السيبراني', 'الموارد البشرية'],
+            typeTags: ['non-technical'],
+            criteria: [
+              { label: 'كفاءة إدارة الصلاحيات والوصول', weight: 30, description: 'سرعة ودقة تنفيذ طلبات فتح الحسابات وتعديل الصلاحيات' },
+              { label: 'سرعة الاستجابة لطلبات الدعم الإداري', weight: 25, description: 'الالتزام باتفاقية مستوى الخدمة في معالجة الطلبات' },
+              { label: 'دقة توثيق سجلات المستخدمين', weight: 25, description: 'جودة الأرشفة الرقمية لطلبات الوصول وإلغاء الحسابات' },
+              { label: 'الالتزام بسياسات أمن المعلومات', weight: 20, description: 'تطبيق ضوابط الأمن وحماية البيانات الحساسة للموظفين' }
             ]
           }
         ];
@@ -311,14 +450,18 @@ export default function App() {
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="fixed right-0 top-0 bottom-0 w-[280px] bg-primary z-[101] lg:hidden flex flex-col shadow-2xl"
             >
-              <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-primary shadow-lg shadow-accent/20">
-                    <Building2 size={18} />
+              <div className="p-6 border-b border-white/10 flex justify-between items-center relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-full bg-accent/5 -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
+                <div className="flex items-center gap-3 relative z-10">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 p-1 flex items-center justify-center shadow-lg">
+                    <img src="/ministry_logo.png" alt="Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                   </div>
-                  <span className="font-black text-sm uppercase tracking-widest text-white">نظام التقييم</span>
+                  <div className="flex flex-col">
+                    <span className="font-black text-[11px] uppercase tracking-wider text-white leading-tight">الجمهورية اليمنية</span>
+                    <span className="text-[8px] font-bold text-accent uppercase tracking-widest leading-tight">وزارة الاتصالات</span>
+                  </div>
                 </div>
-                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 hover:bg-white/10 rounded-full text-white/70">
+                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 hover:bg-white/10 rounded-full text-white/70 relative z-10 transition-colors">
                   <X size={20} />
                 </button>
               </div>
@@ -384,35 +527,43 @@ export default function App() {
 
       {/* Desktop Rail Sidebar */}
       <aside 
-        className={`hidden lg:flex flex-col border-l border-border-theme bg-primary text-white sticky top-0 h-screen transition-all duration-500 ease-in-out z-50 overflow-hidden ${isSidebarOpen ? 'w-64' : 'w-20'}`}
+        className={`hidden lg:flex flex-col sidebar-glass text-white sticky top-0 h-screen transition-all duration-700 ease-in-out z-50 overflow-hidden ${isSidebarOpen ? 'w-72' : 'w-24'}`}
       >
-        <div className="h-20 flex items-center px-6 border-b border-white/5 shrink-0 overflow-hidden">
-          <div className="flex items-center gap-4 min-w-[200px]">
-            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-primary shadow-lg shadow-accent/20 shrink-0">
-              <Building2 size={18} />
+        <div className="h-28 flex items-center px-8 border-b border-white/5 shrink-0 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-accent/20 rounded-full blur-[80px] -translate-y-20 -translate-x-10 pointer-events-none opacity-50" />
+          <div className="flex items-center gap-5 min-w-[250px] relative z-10 transition-all duration-500">
+            <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-3xl flex items-center justify-center p-1.5 shadow-[0_0_30px_rgba(212,175,55,0.15)] border border-white/20 shrink-0 group-hover:bg-white/20 transition-all duration-500">
+              <img 
+                src="/ministry_logo.png" 
+                alt="Logo" 
+                className="w-full h-full object-contain filter drop-shadow-[0_0_12px_rgba(212,175,55,0.6)]" 
+                referrerPolicy="no-referrer"
+              />
             </div>
-            <motion.span 
-              animate={{ opacity: isSidebarOpen ? 1 : 0, x: isSidebarOpen ? 0 : 20 }}
-              className="font-black text-xs uppercase tracking-widest text-white whitespace-nowrap"
+            <motion.div 
+              animate={{ opacity: isSidebarOpen ? 1 : 0, x: isSidebarOpen ? 0 : 30 }}
+              transition={{ duration: 0.5, ease: "circOut" }}
+              className="flex flex-col"
             >
-              نظام التقييم
-            </motion.span>
+              <span className="font-black text-[14px] uppercase tracking-[0.15em] text-white whitespace-nowrap leading-tight">الجمهورية اليمنية</span>
+              <span className="text-[10px] font-bold text-accent/80 uppercase tracking-widest leading-tight mt-1">وزارة الاتصالات</span>
+            </motion.div>
           </div>
         </div>
 
-        <nav className="flex-1 py-8 px-3 space-y-2 overflow-y-auto no-scrollbar">
+        <nav className="flex-1 py-10 px-4 space-y-3 overflow-y-auto no-scrollbar scroll-smooth">
           <NavItem 
             active={activeTab === 'dashboard'} 
             expanded={isSidebarOpen}
             onClick={() => navigate('/')}
-            icon={<LayoutDashboard size={20} />}
+            icon={<LayoutGrid size={22} />}
             label="لوحة التحكم"
           />
           <NavItem 
             active={activeTab === 'employees'} 
             expanded={isSidebarOpen}
             onClick={() => navigate('/employees')}
-            icon={<Users size={20} />}
+            icon={<Contact2 size={22} />}
             label="قاعدة بيانات الكادر"
           />
           {currentUser.role === 'admin' && (
@@ -420,7 +571,7 @@ export default function App() {
               active={activeTab === 'users'} 
               expanded={isSidebarOpen}
               onClick={() => navigate('/users')}
-              icon={<ShieldCheck size={20} />}
+              icon={<ShieldCheck size={22} />}
               label="إدارة المستخدمين"
             />
           )}
@@ -428,14 +579,14 @@ export default function App() {
             active={activeTab === 'strategic'} 
             expanded={isSidebarOpen}
             onClick={() => navigate('/strategic')}
-            icon={<ShieldCheck size={20} />}
-            label="الذكاء الاستراتيجي"
+            icon={<BrainCircuit size={22} />}
+            label="التحليل الاستراتيجي"
           />
           <NavItem 
             active={activeTab === 'reports'} 
             expanded={isSidebarOpen}
             onClick={() => navigate('/reports')}
-            icon={<BarChart3 size={20} />}
+            icon={<PieChart size={22} />}
             label="تقارير الإدارات"
           />
         </nav>
@@ -477,37 +628,39 @@ export default function App() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
+        <div className="absolute inset-0 glossy-mesh pointer-events-none opacity-40" />
+        
         {/* Header (Glass Morph) */}
-        <header className="h-20 shrink-0 glass flex items-center justify-between px-6 md:px-10 sticky top-0 z-[60] border-b-2 border-accent/20">
-          <div className="flex items-center gap-6">
+        <header className="h-24 shrink-0 glass flex items-center justify-between px-6 md:px-12 sticky top-0 z-[60] border-b border-white/40">
+          <div className="flex items-center gap-8 relative z-10">
             <button 
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-2.5 bg-primary text-white rounded-xl shadow-lg shadow-primary/10 hover:scale-105 active:scale-95 transition-all"
+              className="lg:hidden p-3 bg-primary text-white rounded-2xl shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
             >
-              <Menu size={22} />
+              <Menu size={24} />
             </button>
             
-            <div className="flex items-center gap-4 group">
-              <div className="w-12 h-12 bg-white p-1 rounded-2xl shadow-sm border border-border-theme transition-transform group-hover:scale-110">
+            <div className="flex items-center gap-5 group">
+              <div className="w-14 h-14 bg-white p-1 rounded-2xl shadow-modern border border-border-theme transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
                 <img 
                   src="https://upload.wikimedia.org/wikipedia/commons/8/87/%D8%B4%D8%B9%D8%A7%D8%B1_%D8%A7%D9%84%D8%AC%D9%85%D9%87%D9%88%D8%B1%D9%8A%D8%A9_%D8%A7%D9%84%D9%8I%D9%85%D9%86%D9%8A%D8%A9.png" 
                   alt="شعار الوزارة" 
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain filter drop-shadow-sm"
                   referrerPolicy="no-referrer"
                 />
               </div>
               <div className="brand-text hidden sm:block">
-                <div className="flex items-center gap-3">
-                  <h1 className="text-md font-black text-primary leading-none tracking-tight">منصة التقييم المؤسسي</h1>
-                  <div className="h-4 w-[2px] bg-accent/30 rounded-full" />
-                  <span className="text-[11px] font-black text-accent bg-accent/10 px-3 py-1 rounded-lg uppercase tracking-wider">
-                    {activeTab === 'dashboard' ? 'لوحة القيادة' : 
-                     activeTab === 'employees' ? 'الكادر الوظيفي' : 
-                     activeTab === 'reports' ? 'التقارير' : 'الصلاحيات'}
+                <div className="flex items-center gap-4">
+                  <h1 className="text-xl font-black text-primary leading-none tracking-tighter">نظام تقييم الأداء الاستراتيجي</h1>
+                  <div className="h-5 w-[1px] bg-slate-300 rounded-full" />
+                  <span className="text-[10px] font-bold text-accent bg-accent/5 px-4 py-1.5 rounded-lg uppercase tracking-[0.2em] border border-accent/20">
+                    {activeTab === 'dashboard' ? 'Insight Hub' : 
+                     activeTab === 'employees' ? 'Staff Directory' : 
+                     activeTab === 'reports' ? 'Analytics' : 'Security'}
                   </span>
                 </div>
-                <p className="text-[9px] text-text-muted font-bold uppercase tracking-widest mt-1">وزارة الاتصالات وتقنية المعلومات</p>
+                <p className="text-[10px] text-text-muted font-bold uppercase tracking-[0.3em] mt-2 opacity-60">وزارة الاتصالات وتقنية المعلومات</p>
               </div>
             </div>
           </div>
@@ -742,13 +895,19 @@ function NavItem({ active, expanded, onClick, icon, label }: { active: boolean, 
   return (
     <button
       onClick={onClick}
-      className={`group w-full flex items-center gap-4 p-3.5 rounded-2xl text-xs font-black transition-all duration-300 relative ${
+      className={`group w-full flex items-center gap-4 p-3.5 rounded-2xl text-[11px] font-bold tracking-wider transition-all duration-500 relative overflow-hidden ${
         active 
-        ? 'bg-accent text-primary shadow-lg shadow-accent/20' 
-        : 'text-white/50 hover:text-white hover:bg-white/5'
+        ? 'bg-accent/10 text-accent border-l-4 border-accent shadow-[inset_0_0_20px_rgba(197,160,89,0.05)]' 
+        : 'text-white/40 hover:text-white/80 hover:bg-white/5'
       }`}
     >
-      <div className={`transition-transform duration-300 shrink-0 ${active ? 'scale-110' : 'group-hover:scale-110'}`}>
+      {active && (
+        <motion.div 
+          layoutId="nav-glow"
+          className="absolute inset-0 bg-accent/5 blur-xl pointer-events-none" 
+        />
+      )}
+      <div className={`transition-all duration-500 shrink-0 relative z-10 ${active ? 'scale-110 drop-shadow-[0_0_12px_rgba(197,160,89,0.6)]' : 'group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]'}`}>
         {icon}
       </div>
       
