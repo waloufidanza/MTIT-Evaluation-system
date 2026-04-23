@@ -360,110 +360,89 @@ export default function EmployeeDetails({ onEditEmployee, onEvaluateUser }: Empl
       </div>
 
       {/* Header Profile Section */}
-      <div className="card-modern overflow-hidden relative glossy-mesh group">
-        <div className="bg-primary p-12 text-white relative">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-[120px] -translate-y-48 translate-x-48 pointer-events-none" />
-          
-          <div className="absolute top-8 left-8 flex flex-wrap justify-end gap-3 z-30">
-            <button 
-              onClick={() => employee && onEditEmployee?.(employee)}
-              className="flex items-center gap-2 px-6 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-black transition-all"
-            >
-              <FileEdit size={16} />
-              تعديل بيانات الموظف
-            </button>
-            <button 
-              onClick={downloadProfileReport}
-              disabled={isDownloadingProfile}
-              className="flex items-center gap-2 px-6 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-black transition-all"
-            >
-              {isDownloadingProfile ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Printer size={16} />}
-              Download Employee Profile PDF
-            </button>
-            <button 
-              onClick={downloadPagePDF}
-              disabled={isDownloadingPage}
-              className="flex items-center gap-2 px-6 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-black transition-all"
-            >
-              {isDownloadingPage ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <FileDown size={16} />}
-              تصدير الصفحة (PDF)
-            </button>
-            <button 
-              onClick={() => employee && onEvaluateUser?.(employee)}
-              className="flex items-center gap-2 px-6 py-2 bg-accent text-primary rounded-xl text-xs font-black shadow-lg shadow-accent/20 hover:scale-105 active:scale-95 transition-all"
-            >
-              <Plus size={16} />
-              تقييم جديد
-            </button>
+      <div className="luxury-card overflow-hidden glossy-mesh relative group border-none shadow-2xl">
+        <div className="bg-primary p-16 text-white relative">
+          {/* Ambient Background elements */}
+          <div className="absolute top-0 right-0 w-full h-full opacity-20 pointer-events-none">
+             <div className="absolute top-0 right-10 w-96 h-96 bg-accent rounded-full blur-[140px] animate-pulse" />
+             <div className="absolute bottom-0 left-10 w-80 h-80 bg-blue-500 rounded-full blur-[120px]" />
           </div>
-
-          <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-            <div className="flex flex-col items-center gap-4">
-              <div className={`w-32 h-32 rounded-[2.5rem] flex items-center justify-center text-4xl font-black border-4 border-white/20 shadow-2xl relative ${
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none" />
+          
+          <div className="flex flex-col xl:flex-row items-center xl:items-start gap-12 relative z-10">
+            <div className="relative group/avatar">
+              <div className={`w-44 h-44 rounded-[3rem] flex items-center justify-center text-6xl font-black border-4 border-white/20 shadow-2xl relative transition-all duration-700 group-hover/avatar:scale-105 group-hover/avatar:rotate-3 ${
                 latestEvaluation?.totalScore >= 90 ? 'bg-emerald-500' :
                 latestEvaluation?.totalScore >= 75 ? 'bg-blue-500' :
                 latestEvaluation?.totalScore >= 50 ? 'bg-amber-500' : 
-                latestEvaluation ? 'bg-red-500' : 'bg-slate-400'
+                latestEvaluation ? 'bg-red-500' : 'bg-slate-500'
               }`}>
                 {employee.name[0]}
-                {latestEvaluation && (
-                  <span className={`absolute -top-2 -right-2 w-8 h-8 rounded-full border-4 border-primary flex items-center justify-center text-xs ${
-                    latestEvaluation.totalScore >= 90 ? 'bg-emerald-500' :
-                    latestEvaluation.totalScore >= 75 ? 'bg-blue-500' :
-                    latestEvaluation.totalScore >= 50 ? 'bg-amber-500' : 'bg-red-500'
-                  }`}>
-                    %{latestEvaluation.totalScore.toFixed(0)}
-                  </span>
-                )}
+                <div className="absolute -bottom-4 -right-4 bg-white p-3 rounded-2xl shadow-xl border border-border-theme">
+                   <ShieldCheck size={28} className="text-accent" />
+                </div>
               </div>
             </div>
 
-            <div className="text-center md:text-right flex-1">
-              <div className="flex items-center gap-3 mb-4">
-                 <h2 className="text-4xl font-black tracking-tighter">{employee.name}</h2>
-                 <button 
-                    onClick={() => navigate('/employees')}
-                    className="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all text-white border border-white/10"
-                    title="العودة للقائمة"
-                  >
-                    <ArrowLeftRight size={16} />
-                  </button>
-              </div>
-              <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-4">
-                <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                  employee.type === 'technical' ? 'bg-[#e3f2fd] text-[#1565c0]' : 'bg-[#f3e5f5] text-[#7b1fa2]'
-                }`}>
-                  {employee.type === 'technical' ? 'كادر فني' : 'كادر إداري'}
-                </span>
-                <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                  employee.category === 'internal' ? 'bg-emerald-100 text-emerald-700' :
-                  employee.category === 'consultant' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'
-                }`}>
-                  {employee.category === 'internal' ? 'موظف رسمي' : 
-                   employee.category === 'consultant' ? 'مستشار خارجي' : 'متعاقد'}
-                </span>
-
-                {/* Biometric Status Badge */}
-                <div className={`px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2 border shadow-sm ${
-                  employee.biometricStatus === 'online' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'
-                }`}>
-                  <div className={`w-1.5 h-1.5 rounded-full ${employee.biometricStatus === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
-                  {employee.biometricStatus === 'online' ? 'جهاز البصمة: متصل' : 'جهاز البصمة: غير متصل'}
+            <div className="text-center xl:text-right flex-1 space-y-8">
+              <div className="space-y-4">
+                <div className="flex flex-wrap justify-center xl:justify-start gap-3">
+                   <span className="px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-white/10">
+                      ID: {employee.employeeId}
+                   </span>
+                   <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border ${
+                      employee.biometricStatus === 'online' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'
+                   }`}>
+                      {employee.biometricStatus === 'online' ? 'System Online' : 'System Offline'}
+                   </span>
+                </div>
+                <h2 className="text-6xl font-black tracking-tighter leading-tight">{employee.name}</h2>
+                <div className="flex flex-wrap justify-center xl:justify-start gap-6 text-xl text-white/60 font-medium">
+                   <div className="flex items-center gap-3">
+                      <Briefcase size={24} className="text-accent" />
+                      <span>{employee.position}</span>
+                   </div>
+                   <div className="flex items-center gap-3">
+                      <Building2 size={24} className="text-accent" />
+                      <span>{employee.department}</span>
+                   </div>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-6 text-white/80 font-bold text-sm">
-                <span className="flex items-center gap-2"><Briefcase size={16} className="text-accent" /> {employee.position}</span>
-                <span className="flex items-center gap-2">
-                  <Building2 size={16} className="text-accent" /> 
-                  <div className="flex flex-col">
-                    <span>{employee.department} (رئيسي)</span>
-                    {employee.secondDepartment && (
-                      <span className="text-[10px] text-white/60">مستعان به في: {employee.secondDepartment}</span>
-                    )}
-                  </div>
-                </span>
-                <span className="flex items-center gap-2"><Hash size={16} className="text-accent" /> {employee.employeeId}</span>
+
+              <div className="flex flex-wrap justify-center xl:justify-start gap-4">
+                <button 
+                  onClick={() => employee && onEditEmployee?.(employee)}
+                  className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-[12px] font-black uppercase tracking-widest transition-all backdrop-blur-md"
+                >
+                  Edit Profile
+                </button>
+                <button 
+                  onClick={downloadProfileReport}
+                  disabled={isDownloadingProfile}
+                  className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-[12px] font-black uppercase tracking-widest transition-all backdrop-blur-md flex items-center gap-3"
+                >
+                  {isDownloadingProfile ? <RefreshCw className="animate-spin" size={18} /> : <FileDown size={18} />}
+                  Export Intelligence
+                </button>
+                <button 
+                  onClick={() => employee && onEvaluateUser?.(employee)}
+                  className="px-8 py-4 bg-accent text-primary rounded-2xl text-[12px] font-black uppercase tracking-widest shadow-2xl shadow-accent/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
+                >
+                  <Plus size={20} strokeWidth={3} />
+                  إجراء تقييم جديد
+                </button>
               </div>
+            </div>
+
+            <div className="hidden xl:flex flex-col items-center justify-center p-10 bg-white/5 backdrop-blur-xl rounded-[3rem] border border-white/10 min-w-[240px]">
+               <p className="text-[11px] font-black text-accent uppercase tracking-[0.3em] mb-4">Total Readiness</p>
+               <div className="relative w-32 h-32 flex items-center justify-center">
+                  <svg className="w-full h-full -rotate-90">
+                    <circle className="text-white/10" strokeWidth="8" stroke="currentColor" fill="transparent" r="58" cx="64" cy="64" />
+                    <circle className="text-accent transition-all duration-1000" strokeWidth="8" strokeDasharray={364.4} strokeDashoffset={364.4 * (1 - (latestEvaluation?.totalScore || 0) / 100)} strokeLinecap="round" stroke="currentColor" fill="transparent" r="58" cx="64" cy="64" />
+                  </svg>
+                  <span className="absolute text-3xl font-black">%{latestEvaluation?.totalScore.toFixed(0) || '--'}</span>
+               </div>
             </div>
           </div>
         </div>
@@ -1375,15 +1354,15 @@ function SummaryItem({ label, value }: { label: string, value: string }) {
 
 function AttendanceBadge({ status, showText = false }: { status: Evaluation['attendance'], showText?: boolean }) {
   const configs = {
-    excellent: { color: 'text-emerald-500 bg-emerald-50 border-emerald-100', icon: <CheckCircle2 size={16} />, label: 'ممتاز' },
-    good: { color: 'text-blue-500 bg-blue-50 border-blue-100', icon: <Clock size={16} />, label: 'جيد' },
-    average: { color: 'text-amber-500 bg-amber-50 border-amber-100', icon: <AlertCircle size={16} />, label: 'متوسط' },
-    poor: { color: 'text-red-500 bg-red-50 border-red-100', icon: <XCircle size={16} />, label: 'ضعيف' },
+    excellent: { color: 'text-emerald-600 bg-emerald-50 border-emerald-100', icon: <CheckCircle2 size={16} strokeWidth={3} />, label: 'حضور كامل' },
+    good: { color: 'text-blue-600 bg-blue-50 border-blue-100', icon: <Clock size={16} strokeWidth={3} />, label: 'منضبط' },
+    average: { color: 'text-amber-600 bg-amber-50 border-amber-100', icon: <AlertCircle size={16} strokeWidth={3} />, label: 'تأخير متكرر' },
+    poor: { color: 'text-red-600 bg-red-50 border-red-100', icon: <XCircle size={16} strokeWidth={3} />, label: 'غياب غير مبرر' },
   };
   const config = configs[status];
   return (
     <div 
-      className={`flex items-center gap-2 ${showText ? 'px-3 py-1.5 rounded-xl border' : 'w-9 h-9 rounded-full justify-center shadow-sm border-2'} text-[10px] font-bold uppercase tracking-tighter transition-all hover:scale-110 ${config.color}`}
+      className={`flex items-center gap-2 ${showText ? 'px-4 py-2 rounded-2xl border' : 'w-11 h-11 rounded-2xl justify-center shadow-lg border-2'} text-[11px] font-black uppercase tracking-tight transition-all hover:scale-110 active:scale-95 ${config.color}`}
       title={config.label}
     >
       {config.icon}
@@ -1394,14 +1373,14 @@ function AttendanceBadge({ status, showText = false }: { status: Evaluation['att
 
 function DisciplineBadge({ status, showText = false }: { status: Evaluation['discipline'], showText?: boolean }) {
   const configs = {
-    committed: { color: 'text-emerald-500 bg-emerald-50 border-emerald-100', icon: <CheckCircle2 size={16} />, label: 'منضبط' },
-    'needs-improvement': { color: 'text-amber-500 bg-amber-50 border-amber-100', icon: <AlertCircle size={16} />, label: 'يحتاج تحسين' },
-    warning: { color: 'text-red-500 bg-red-50 border-red-100', icon: <XCircle size={16} />, label: 'إنذار' },
+    committed: { color: 'text-emerald-600 bg-emerald-50 border-emerald-100', icon: <ShieldCheck size={16} strokeWidth={3} />, label: 'سلوك مثالي' },
+    'needs-improvement': { color: 'text-amber-600 bg-amber-50 border-amber-100', icon: <Activity size={16} strokeWidth={3} />, label: 'تحت الملاحظة' },
+    warning: { color: 'text-red-600 bg-red-50 border-red-100', icon: <AlertCircle size={16} strokeWidth={3} />, label: 'إنذار رسمي' },
   };
   const config = configs[status];
   return (
     <div 
-      className={`flex items-center gap-2 ${showText ? 'px-3 py-1.5 rounded-xl border' : 'w-9 h-9 rounded-full justify-center shadow-sm border-2'} text-[10px] font-bold uppercase tracking-tighter transition-all hover:scale-110 ${config.color}`}
+      className={`flex items-center gap-2 ${showText ? 'px-4 py-2 rounded-2xl border' : 'w-11 h-11 rounded-2xl justify-center shadow-lg border-2'} text-[11px] font-black uppercase tracking-tight transition-all hover:scale-110 active:scale-95 ${config.color}`}
       title={config.label}
     >
       {config.icon}

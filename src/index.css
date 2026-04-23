@@ -34,12 +34,24 @@
   }
 
   h1, h2, h3 {
-    @apply font-black tracking-tight leading-tight;
+    @apply font-black tracking-tighter leading-none;
   }
   
   h4, h5, h6 {
-    @apply font-bold tracking-tight leading-tight;
+    @apply font-bold tracking-tight leading-snug;
   }
+}
+
+.luxury-card {
+  @apply bg-white rounded-[2.5rem] border border-border-theme shadow-sm overflow-hidden transition-all duration-500 hover:shadow-xl hover:shadow-primary/5;
+}
+
+.technical-label {
+  @apply text-[10px] font-bold text-text-muted uppercase tracking-[0.25em] opacity-60 font-sans;
+}
+
+.glossy-surface {
+  @apply bg-white/40 backdrop-blur-xl border border-white/20 shadow-inner;
 }
 
 .glass {
@@ -127,16 +139,40 @@
   @apply mb-4 leading-relaxed;
 }
 
+.ai-markdown-container h1, 
+.ai-markdown-container h2, 
 .ai-markdown-container h3 {
-  @apply text-lg font-black text-primary mt-6 mb-3;
+  @apply font-black text-primary mt-8 mb-4 tracking-tighter;
 }
 
-.ai-markdown-container ul {
-  @apply list-disc list-inside space-y-2 mb-4;
+.ai-markdown-container h3 {
+  @apply text-xl;
+}
+
+.ai-markdown-container ul, 
+.ai-markdown-container ol {
+  @apply space-y-3 mb-6 mr-4 list-none;
 }
 
 .ai-markdown-container li {
-  @apply pr-2;
+  @apply relative pr-6 before:content-[''] before:absolute before:right-0 before:top-2 before:w-2 before:h-2 before:bg-accent before:rounded-full before:shadow-[0_0_8px_rgba(212,175,55,0.5)];
+}
+
+.ai-markdown-container strong {
+  @apply font-black text-primary bg-accent/10 px-1 rounded;
+}
+
+.ai-markdown-container blockquote {
+  @apply border-r-4 border-accent bg-slate-50 p-6 rounded-2xl italic text-text-muted my-6;
+}
+
+.mission-gradient {
+  background: radial-gradient(circle at 100% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+              radial-gradient(circle at 0% 100%, rgba(10, 25, 47, 0.05) 0%, transparent 50%);
+}
+
+.secure-glow {
+  box-shadow: 0 0 40px rgba(197, 160, 89, 0.08);
 }
 
 .no-scrollbar::-webkit-scrollbar {

@@ -525,49 +525,48 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Desktop Rail Sidebar */}
+      {/* Minimal Ministry Sidebar */}
       <aside 
-        className={`hidden lg:flex flex-col sidebar-glass text-white sticky top-0 h-screen transition-all duration-700 ease-in-out z-50 overflow-hidden ${isSidebarOpen ? 'w-72' : 'w-24'}`}
+        className={`hidden lg:flex flex-col bg-primary border-l border-white/5 sticky top-0 h-screen transition-all duration-700 ease-in-out z-50 overflow-hidden relative shadow-2xl ${isSidebarOpen ? 'w-72' : 'w-24'}`}
       >
-        <div className="h-28 flex items-center px-8 border-b border-white/5 shrink-0 overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-accent/20 rounded-full blur-[80px] -translate-y-20 -translate-x-10 pointer-events-none opacity-50" />
-          <div className="flex items-center gap-5 min-w-[250px] relative z-10 transition-all duration-500">
-            <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-3xl flex items-center justify-center p-1.5 shadow-[0_0_30px_rgba(212,175,55,0.15)] border border-white/20 shrink-0 group-hover:bg-white/20 transition-all duration-500">
-              <img 
-                src="/ministry_logo.png" 
-                alt="Logo" 
-                className="w-full h-full object-contain filter drop-shadow-[0_0_12px_rgba(212,175,55,0.6)]" 
-                referrerPolicy="no-referrer"
-              />
+        {/* Subtle technical background */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none" 
+             style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+        
+        <div className="h-28 flex items-center px-8 border-b border-white/5 shrink-0 overflow-hidden relative z-10">
+          <div className="flex items-center gap-5 min-w-[250px] relative transition-all duration-500">
+            <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center shadow-lg shadow-accent/20 rotate-3 transition-transform group-hover:rotate-6 shrink-0">
+               <ShieldCheck size={28} className="text-primary" />
             </div>
             <motion.div 
               animate={{ opacity: isSidebarOpen ? 1 : 0, x: isSidebarOpen ? 0 : 30 }}
               transition={{ duration: 0.5, ease: "circOut" }}
               className="flex flex-col"
             >
-              <span className="font-black text-[14px] uppercase tracking-[0.15em] text-white whitespace-nowrap leading-tight">الجمهورية اليمنية</span>
-              <span className="text-[10px] font-bold text-accent/80 uppercase tracking-widest leading-tight mt-1">وزارة الاتصالات</span>
+              <span className="font-black text-[14px] uppercase tracking-[0.15em] text-white whitespace-nowrap leading-tight">الوزارة</span>
+              <span className="text-[10px] font-bold text-accent/80 uppercase tracking-widest leading-tight mt-1 opacity-70">STRATEGIC UNIT</span>
             </motion.div>
           </div>
         </div>
 
-        <nav className="flex-1 py-10 px-4 space-y-3 overflow-y-auto no-scrollbar scroll-smooth">
-          <NavItem 
+        <nav className="flex-1 py-10 px-4 space-y-2 overflow-y-auto no-scrollbar scroll-smooth relative z-10">
+          <div className={`text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-4 px-4 transition-opacity duration-500 ${isSidebarOpen ? 'opacity-100' : 'opacity-0'}`}>Executive Modules</div>
+          <RailNavItem 
             active={activeTab === 'dashboard'} 
             expanded={isSidebarOpen}
             onClick={() => navigate('/')}
-            icon={<LayoutGrid size={22} />}
+            icon={<LayoutDashboard size={22} />}
             label="لوحة التحكم"
           />
-          <NavItem 
+          <RailNavItem 
             active={activeTab === 'employees'} 
             expanded={isSidebarOpen}
             onClick={() => navigate('/employees')}
-            icon={<Contact2 size={22} />}
+            icon={<Users size={22} />}
             label="قاعدة بيانات الكادر"
           />
           {currentUser.role === 'admin' && (
-            <NavItem 
+            <RailNavItem 
               active={activeTab === 'users'} 
               expanded={isSidebarOpen}
               onClick={() => navigate('/users')}
@@ -575,14 +574,14 @@ export default function App() {
               label="إدارة المستخدمين"
             />
           )}
-          <NavItem 
+          <RailNavItem 
             active={activeTab === 'strategic'} 
             expanded={isSidebarOpen}
             onClick={() => navigate('/strategic')}
             icon={<BrainCircuit size={22} />}
-            label="التحليل الاستراتيجي"
+            label="الذكاء الاستراتيجي"
           />
-          <NavItem 
+          <RailNavItem 
             active={activeTab === 'reports'} 
             expanded={isSidebarOpen}
             onClick={() => navigate('/reports')}
@@ -591,24 +590,24 @@ export default function App() {
           />
         </nav>
 
-        <div className="p-4 border-t border-white/5 bg-black/10">
+        <div className="p-4 border-t border-white/5 bg-black/10 relative z-10">
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="w-full flex items-center justify-center p-2 hover:bg-white/5 rounded-lg text-white/50 hover:text-white transition-colors"
+            className="w-full flex items-center justify-center p-3 hover:bg-white/5 rounded-xl text-white/30 hover:text-white transition-all mb-4"
           >
             <motion.div animate={{ rotate: isSidebarOpen ? 0 : 180 }}>
               <ArrowLeft size={18} />
             </motion.div>
           </button>
           
-          <div className="mt-4 overflow-hidden">
-            <div className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${isSidebarOpen ? 'bg-white/5' : ''}`}>
-              <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center shrink-0">
-                <UserCircle className="w-5 h-5 text-accent" />
+          <div className="overflow-hidden">
+            <div className={`flex items-center gap-3 p-3 rounded-2xl transition-all ${isSidebarOpen ? 'bg-white/5 border border-white/5' : 'justify-center'}`}>
+              <div className="w-10 h-10 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center shrink-0 shadow-lg">
+                <UserCircle className="w-6 h-6 text-accent" />
               </div>
               {isSidebarOpen && (
                 <div className="min-w-0">
-                  <p className="text-[11px] font-black truncate">{currentUser.fullName}</p>
+                  <p className="text-[12px] font-black truncate text-white">{currentUser.fullName}</p>
                   <p className="text-[9px] text-white/40 font-bold uppercase tracking-tighter">
                     {currentUser.role === 'admin' ? 'مدير النظام' : 'مسؤول تقييم'}
                   </p>
@@ -618,9 +617,9 @@ export default function App() {
             {isSidebarOpen && (
               <button 
                 onClick={handleLogout}
-                className="mt-4 w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-red-500/10 hover:text-red-400 py-2.5 rounded-xl text-[10px] font-black transition-all border border-transparent hover:border-red-500/20"
+                className="mt-4 w-full flex items-center justify-center gap-3 bg-white/5 hover:bg-red-500/10 hover:text-red-400 py-3 rounded-2xl text-[10px] font-bold transition-all border border-transparent hover:border-red-400/20"
               >
-                <LogOut size={12} /> تسجيل الخروج
+                <LogOut size={14} /> تسجيل الخروج
               </button>
             )}
           </div>
@@ -631,36 +630,31 @@ export default function App() {
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
         <div className="absolute inset-0 glossy-mesh pointer-events-none opacity-40" />
         
-        {/* Header (Glass Morph) */}
-        <header className="h-24 shrink-0 glass flex items-center justify-between px-6 md:px-12 sticky top-0 z-[60] border-b border-white/40">
-          <div className="flex items-center gap-8 relative z-10">
+        {/* Header (Ministry Grade Header) */}
+        <header className="h-24 shrink-0 bg-white/70 backdrop-blur-md flex items-center justify-between px-6 md:px-12 sticky top-0 z-[60] border-b border-white shadow-sm">
+          <div className="flex items-center gap-10 relative z-10">
             <button 
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-3 bg-primary text-white rounded-2xl shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+              className="lg:hidden p-3 bg-primary text-white rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all"
             >
               <Menu size={24} />
             </button>
             
             <div className="flex items-center gap-5 group">
-              <div className="w-14 h-14 bg-white p-1 rounded-2xl shadow-modern border border-border-theme transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+              <div className="w-12 h-12 bg-white p-1 rounded-2xl shadow-md border border-slate-100 transition-all duration-500 group-hover:scale-110">
                 <img 
                   src="https://upload.wikimedia.org/wikipedia/commons/8/87/%D8%B4%D8%B9%D8%A7%D8%B1_%D8%A7%D9%84%D8%AC%D9%85%D9%87%D9%88%D8%B1%D9%8A%D8%A9_%D8%A7%D9%84%D9%8I%D9%85%D9%86%D9%8A%D8%A9.png" 
-                  alt="شعار الوزارة" 
-                  className="w-full h-full object-contain filter drop-shadow-sm"
+                  alt="وزارة الاتصالات" 
+                  className="w-full h-full object-contain"
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <div className="brand-text hidden sm:block">
-                <div className="flex items-center gap-4">
-                  <h1 className="text-xl font-black text-primary leading-none tracking-tighter">نظام تقييم الأداء الاستراتيجي</h1>
-                  <div className="h-5 w-[1px] bg-slate-300 rounded-full" />
-                  <span className="text-[10px] font-bold text-accent bg-accent/5 px-4 py-1.5 rounded-lg uppercase tracking-[0.2em] border border-accent/20">
-                    {activeTab === 'dashboard' ? 'Insight Hub' : 
-                     activeTab === 'employees' ? 'Staff Directory' : 
-                     activeTab === 'reports' ? 'Analytics' : 'Security'}
-                  </span>
+              <div>
+                <h1 className="text-xl font-black text-primary leading-none tracking-tighter">نظام تقييم الأداء الاستراتيجي</h1>
+                <div className="flex items-center gap-3 mt-1.5 opacity-60">
+                  <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                  <span className="text-[10px] text-text-muted font-bold uppercase tracking-[0.2em]">Strategic Monitoring Hub</span>
                 </div>
-                <p className="text-[10px] text-text-muted font-bold uppercase tracking-[0.3em] mt-2 opacity-60">وزارة الاتصالات وتقنية المعلومات</p>
               </div>
             </div>
           </div>
@@ -891,23 +885,17 @@ export default function App() {
   );
 }
 
-function NavItem({ active, expanded, onClick, icon, label }: { active: boolean, expanded: boolean, onClick: () => void, icon: any, label: string }) {
+function RailNavItem({ active, expanded, onClick, icon, label }: { active: boolean, expanded: boolean, onClick: () => void, icon: any, label: string }) {
   return (
     <button
       onClick={onClick}
-      className={`group w-full flex items-center gap-4 p-3.5 rounded-2xl text-[11px] font-bold tracking-wider transition-all duration-500 relative overflow-hidden ${
+      className={`group w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 relative overflow-hidden ${
         active 
-        ? 'bg-accent/10 text-accent border-l-4 border-accent shadow-[inset_0_0_20px_rgba(197,160,89,0.05)]' 
+        ? 'bg-white/10 text-accent border border-white/5 shadow-lg' 
         : 'text-white/40 hover:text-white/80 hover:bg-white/5'
       }`}
     >
-      {active && (
-        <motion.div 
-          layoutId="nav-glow"
-          className="absolute inset-0 bg-accent/5 blur-xl pointer-events-none" 
-        />
-      )}
-      <div className={`transition-all duration-500 shrink-0 relative z-10 ${active ? 'scale-110 drop-shadow-[0_0_12px_rgba(197,160,89,0.6)]' : 'group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]'}`}>
+      <div className={`transition-all duration-300 shrink-0 relative z-10 ${active ? 'scale-110 drop-shadow-[0_0_12px_rgba(197,160,89,0.5)]' : 'group-hover:scale-110'}`}>
         {icon}
       </div>
       
@@ -915,21 +903,23 @@ function NavItem({ active, expanded, onClick, icon, label }: { active: boolean, 
         <motion.span 
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
-          className="whitespace-nowrap tracking-wide"
+          className="whitespace-nowrap tracking-tight font-bold text-[14px]"
         >
           {label}
         </motion.span>
       )}
 
-      {active && !expanded && (
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-accent rounded-l-full shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+      {active && (
+        <motion.div 
+          layoutId="sidebar-active-indicator"
+          className="absolute right-0 w-1 h-8 bg-accent rounded-l-full shadow-[0_0_15px_rgba(197,160,89,1)]" 
+        />
       )}
 
-      {/* Tooltip for collapsed mode */}
+      {/* Technical label for collapsed state */}
       {!expanded && (
-        <div className="absolute right-full mr-4 px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[10px] font-black opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap shadow-xl z-[100] border border-white/10">
+        <div className="absolute right-full mr-4 px-3 py-1.5 bg-primary border border-white/10 text-[10px] text-white font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 pointer-events-none transition-all translate-x-2 group-hover:translate-x-0 whitespace-nowrap shadow-2xl z-[100] backdrop-blur-md">
           {label}
-          <div className="absolute left-full top-1/2 -translate-y-1/2 border-8 border-transparent border-l-slate-900" />
         </div>
       )}
     </button>

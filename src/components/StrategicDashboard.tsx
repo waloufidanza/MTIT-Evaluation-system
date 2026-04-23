@@ -194,65 +194,98 @@ export default function StrategicDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <div className="lg:col-span-2 bg-white rounded-[3rem] border border-border-theme p-10 shadow-sm relative overflow-hidden">
-           <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-           <div className="flex justify-between items-center mb-12 relative z-10">
-              <h3 className="text-2xl font-black flex items-center gap-4 text-primary uppercase tracking-tight">
-                 <BarChart3 className="text-accent" size={28} />
-                 ترتيب القطاعات حسب الكفاءة النوعية
-              </h3>
-           </div>
-           <div className="h-[450px] relative z-10">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={deptChartData} layout="vertical" margin={{ left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
-                  <XAxis type="number" domain={[0, 100]} hide />
-                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 13, fontWeight: 'black', fill: '#64748b' }} width={140} />
-                  <Tooltip 
-                    cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)', fontSize: '12px', direction: 'rtl', fontWeight: 'bold' }}
-                  />
-                  <Bar 
-                    dataKey="avg" 
-                    fill="#0a192f" 
-                    radius={[0, 12, 12, 0]} 
-                    barSize={24}
-                  >
-                    {deptChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.avg >= 85 ? '#c5a059' : '#0a192f'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-           </div>
+        <div className="lg:col-span-2 luxury-card p-12 relative">
+            <div className="flex justify-between items-center mb-16">
+               <div>
+                 <h3 className="text-3xl font-black text-primary tracking-tighter">مؤشرات الكفاءة القطاعية</h3>
+                 <p className="technical-label mt-2">Departmental Performance Benchmarking v4.0</p>
+               </div>
+               <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner">
+                  <Activity size={24} className="text-accent" />
+               </div>
+            </div>
+            <div className="h-[480px]">
+               <ResponsiveContainer width="100%" height="100%">
+                 <BarChart data={deptChartData} layout="vertical" margin={{ left: 30, right: 30 }}>
+                   <defs>
+                     <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+                       <stop offset="0%" stopColor="#0a192f" />
+                       <stop offset="100%" stopColor="#c5a059" />
+                     </linearGradient>
+                   </defs>
+                   <CartesianGrid strokeDasharray="6 6" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                   <XAxis type="number" domain={[0, 100]} hide />
+                   <YAxis 
+                     dataKey="name" 
+                     type="category" 
+                     axisLine={false} 
+                     tickLine={false} 
+                     tick={{ fontSize: 13, fontWeight: 'black', fill: '#0a192f', fontFamily: 'Inter' }} 
+                     width={150} 
+                   />
+                   <Tooltip 
+                     cursor={{ fill: 'rgba(10, 25, 47, 0.03)' }}
+                     contentStyle={{ 
+                       borderRadius: '24px', 
+                       border: '1px solid #e2e8f0', 
+                       boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)', 
+                       fontSize: '12px', 
+                       direction: 'rtl', 
+                       fontWeight: 'bold',
+                       background: 'white'
+                     }}
+                   />
+                   <Bar 
+                     dataKey="avg" 
+                     fill="url(#barGradient)" 
+                     radius={[0, 10, 10, 0]} 
+                     barSize={32}
+                   >
+                     {deptChartData.map((entry, index) => (
+                       <Cell key={`cell-${index}`} />
+                     ))}
+                   </Bar>
+                 </BarChart>
+               </ResponsiveContainer>
+            </div>
         </div>
 
-        <div className="bg-white rounded-[3rem] border border-border-theme overflow-hidden shadow-sm flex flex-col group">
-              <div className="p-10 bg-slate-50 border-b border-border-theme group-hover:bg-slate-100 transition-colors">
-                 <h3 className="text-xl font-bold flex items-center gap-4 text-primary uppercase">
-                    <BrainCircuit className="text-accent" size={24} />
-                    مخرجات المحلل الذكي
-                 </h3>
-                 <p className="text-[10px] font-bold text-text-muted mt-2 tracking-widest">Generative Strategic Insights v4.0</p>
+        <div className="luxury-card flex flex-col group">
+              <div className="p-10 bg-primary border-b border-primary/20 relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-40 h-40 bg-accent/20 rounded-full blur-[60px] -translate-y-20 -translate-x-10 pointer-events-none" />
+                 <div className="relative z-10">
+                   <h3 className="text-xl font-bold flex items-center gap-4 text-white uppercase tracking-tight">
+                      <BrainCircuit className="text-accent" size={24} />
+                      تقرير هيئة الاستخبارات الإدارية
+                   </h3>
+                   <div className="technical-label text-white/40 mt-3 opacity-100">CONFIDENTIAL • AI STRATEGIC BRIEF</div>
+                 </div>
               </div>
-          <div className="p-10 flex-1 overflow-y-auto max-h-[600px] custom-scrollbar">
+          <div className="p-10 flex-1 overflow-y-auto max-h-[650px] custom-scrollbar bg-slate-50/30">
              {isAnalyzing ? (
-               <div className="h-60 flex flex-col items-center justify-center gap-6 text-text-muted">
-                  <div className="w-12 h-12 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
-                  <p className="text-sm font-black animate-pulse tracking-widest uppercase">Analyzing ministry data patterns...</p>
+               <div className="h-full flex flex-col items-center justify-center gap-8 text-text-muted">
+                  <div className="relative">
+                    <div className="w-16 h-16 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
+                    <BrainCircuit size={24} className="absolute inset-0 m-auto text-accent animate-pulse" />
+                  </div>
+                  <div className="text-center space-y-2">
+                    <p className="text-sm font-black tracking-widest uppercase text-primary animate-pulse">Processing Ministry Intelligence...</p>
+                    <p className="text-[10px] technical-label text-text-muted">Analyzing correlation patterns and risk vectors</p>
+                  </div>
                </div>
              ) : strategicInsights ? (
-               <div className="prose prose-slate prose-sm text-right leading-loose font-medium ai-markdown-container">
+               <div className="prose prose-slate prose-sm text-right leading-loose font-medium ai-markdown-container max-w-none">
                   <Markdown>{strategicInsights}</Markdown>
                </div>
              ) : (
-               <div className="h-60 flex flex-col items-center justify-center gap-6 text-center">
-                  <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200 border border-slate-100">
-                     <BrainCircuit size={40} />
+               <div className="h-full flex flex-col items-center justify-center gap-8 text-center py-20 opacity-40">
+                  <div className="w-24 h-24 bg-white rounded-[2.5rem] shadow-lg flex items-center justify-center text-slate-200 border border-slate-100">
+                     <FileSearch size={44} />
                   </div>
-                  <p className="text-xs font-bold text-text-muted max-w-[220px] leading-relaxed">
-                    محرك التحليل الاستراتيجي بانتظار أمر التنشيط لبدء معالجة البيانات الحالية.
-                  </p>
+                  <div className="space-y-3">
+                    <p className="text-xs font-bold text-primary max-w-[250px] leading-relaxed mx-auto uppercase tracking-widest">Awaiting Analysis Command</p>
+                    <p className="text-[10px] technical-label">System idle. Performance data available for processing.</p>
+                  </div>
                </div>
              )}
           </div>

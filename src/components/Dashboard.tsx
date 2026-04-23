@@ -47,7 +47,8 @@ import {
   Trophy,
   Target,
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  BrainCircuit
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
@@ -1119,166 +1120,142 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
                 )}
               </div>
 
-              <div className="relative z-10 px-8 pb-8">
-                <div className="overflow-x-auto custom-scrollbar rounded-[2rem] border border-border-theme bg-white/40 shadow-inner">
+              <div className="luxury-card overflow-hidden">
+                <div className="overflow-x-auto p-4 custom-scrollbar">
                   <table className="w-full text-right border-collapse min-w-[1000px]">
-                <thead>
-                  <tr className="bg-slate-50/80 border-b border-border-theme">
-                    <th className="px-8 py-6 w-16">
-                      <input 
-                        type="checkbox" 
-                        onChange={handleSelectAll}
-                        checked={selectedEmployees.length === paginatedEmployees.length && paginatedEmployees.length > 0}
-                        className="w-5 h-5 accent-accent rounded cursor-pointer"
-                      />
-                    </th>
-                    <th className="px-8 py-6 text-label">
-                      <button 
-                        onClick={() => handleSort('name')}
-                        className="flex items-center gap-2 hover:text-accent transition-all group font-bold"
-                      >
-                        اسم الموظف <ArrowUpDown size={14} className="opacity-40 group-hover:opacity-100 transition-opacity" />
-                      </button>
-                    </th>
-                    <th className="px-8 py-6 text-label">الإدارة / المسمى الوظيفي</th>
-                    <th className="px-8 py-6 text-label">
-                      <button 
-                        onClick={() => handleSort('employeeId')}
-                        className="flex items-center gap-2 hover:text-accent transition-all group font-bold"
-                      >
-                        الرقم الوظيفي <ArrowUpDown size={14} className="opacity-40 group-hover:opacity-100 transition-opacity" />
-                      </button>
-                    </th>
-                    <th className="px-8 py-6 text-label">مؤشر البصمة</th>
-                    <th className="px-8 py-6 text-label">
-                      <button 
-                        onClick={() => handleSort('joinDate')}
-                        className="flex items-center gap-2 hover:text-accent transition-all group font-bold"
-                      >
-                        تاريخ التوظيف <ArrowUpDown size={14} className="opacity-40 group-hover:opacity-100 transition-opacity" />
-                      </button>
-                    </th>
-                    <th className="px-8 py-6 text-label text-left uppercase">Performance & Status</th>
-                    <th className="px-8 py-6 text-label text-left">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-theme/50">
-                  {paginatedEmployees.map(emp => (
-                    <tr 
-                      key={emp.id} 
-                      onClick={() => navigate(`/details/${emp.id}`)}
-                      className={`hover:bg-white/60 transition-all cursor-pointer group ${selectedEmployees.includes(emp.id!) ? 'bg-accent/5' : ''}`}
-                    >
-                      <td className="px-6 py-5" onClick={(e) => e.stopPropagation()}>
-                        <input 
-                          type="checkbox" 
-                          checked={selectedEmployees.includes(emp.id!)}
-                          onChange={() => handleSelectOne(emp.id!)}
-                          className="w-4 h-4 accent-accent rounded cursor-pointer"
-                        />
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-5">
-                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-lg shrink-0 border border-white shadow-premium relative transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 ${
-                            getLatestScore(emp.id!) === null ? 'bg-slate-200 text-slate-500' :
-                            getLatestScore(emp.id!)! >= 90 ? 'bg-emerald-500 text-white shadow-emerald-500/20' :
-                            getLatestScore(emp.id!)! >= 75 ? 'bg-blue-500 text-white shadow-blue-500/20' :
-                            getLatestScore(emp.id!)! >= 50 ? 'bg-amber-500 text-white shadow-amber-500/20' : 'bg-red-500 text-white shadow-red-500/20'
-                          }`}>
-                            {emp.name[0]}
-                            {getLatestScore(emp.id!) !== null && (
-                              <div className={`absolute -top-2.5 -right-2.5 w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-[10px] text-white font-black shadow-lg ${
-                                getLatestScore(emp.id!)! >= 90 ? 'bg-emerald-600' :
-                                getLatestScore(emp.id!)! >= 75 ? 'bg-blue-600' :
-                                getLatestScore(emp.id!)! >= 50 ? 'bg-amber-600' : 'bg-red-600'
-                              }`}>
-                                {getLatestScore(emp.id!)?.toFixed(0)}
-                              </div>
-                            )}
+                    <thead>
+                      <tr className="border-b border-border-theme bg-slate-50/50">
+                        <th className="px-8 py-8 w-20">
+                          <div className="flex items-center justify-center">
+                            <input 
+                              type="checkbox" 
+                              onChange={handleSelectAll}
+                              checked={selectedEmployees.length === paginatedEmployees.length && paginatedEmployees.length > 0}
+                              className="w-5 h-5 accent-accent rounded-lg cursor-pointer"
+                            />
                           </div>
-                          <div className="min-w-0">
-                            <div className="font-black text-[16px] text-primary group-hover:text-accent transition-colors truncate tracking-tighter">
-                              {emp.name}
-                            </div>
-                            <div className="text-[11px] text-text-muted font-bold tracking-[0.15em] mt-1 opacity-60 font-sans uppercase">Emp ID: {emp.employeeId}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="text-[13px] font-black text-primary group-hover:translate-x-2 transition-transform">{emp.department}</div>
-                        <div className="text-[11px] text-text-muted font-bold mt-1 opacity-60 tracking-tight">{emp.position}</div>
-                      </td>
-                      <td className="px-8 py-6 shrink-0">
-                        <span className="font-mono text-[12px] font-black text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 group-hover:border-accent/40 group-hover:text-primary transition-all">
-                          {emp.employeeId}
-                        </span>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-3 text-[12px] font-black text-slate-600">
-                          <Fingerprint size={16} className="text-accent/60 group-hover:text-accent transition-colors" />
-                          {emp.biometricId || <span className="opacity-30">---</span>}
-                        </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="text-[12px] font-black text-slate-500 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 inline-block group-hover:bg-white transition-colors">
-                           {emp.joinDate}
-                        </div>
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="flex flex-col items-end gap-2">
-                          <div className="flex gap-2">
-                            <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-                              emp.type === 'technical' ? 'bg-[#e3f2fd] text-[#1565c0] border border-[#bbdefb]' : 'bg-[#f3e5f5] text-[#7b1fa2] border border-[#e1bee7]'
-                            }`}>
-                              {emp.type === 'technical' ? 'فني' : 'إداري'}
-                            </span>
-                            <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-                              emp.category === 'consultant' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
-                              emp.category === 'contractor' ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                            }`}>
-                              {emp.category === 'internal' ? 'رسمي' : 
-                               emp.category === 'consultant' ? 'مستشار' : 'متعاقد'}
-                            </span>
-                          </div>
-                          {getLatestScore(emp.id!) && (
-                            <span className="text-[11px] font-black text-primary bg-white/60 px-3 py-1 rounded-lg border border-white/80 shadow-sm">
-                              ACHIEVED %{getLatestScore(emp.id!)!.toFixed(0)}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-8 py-6 text-left" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-2 pr-4">
+                        </th>
+                        <th className="px-8 py-8">
                           <button 
-                            type="button"
+                            onClick={() => handleSort('name')}
+                            className="flex items-center gap-3 hover:text-accent transition-all group"
+                          >
+                            <span className="technical-label">الكادر والمنصب</span>
+                            <ArrowUpDown size={14} className="opacity-40 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        </th>
+                        <th className="px-8 py-8 whitespace-nowrap"><span className="technical-label">الإدارة / المسمى</span></th>
+                        <th className="px-8 py-8"><span className="technical-label">الرقم الوظيفي</span></th>
+                        <th className="px-8 py-8"><span className="technical-label">مؤشر البصمة</span></th>
+                        <th className="px-8 py-8 text-left whitespace-nowrap"><span className="technical-label">Performance Metric</span></th>
+                        <th className="px-8 py-8 text-left whitespace-nowrap"><span className="technical-label">Actions</span></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-theme/50">
+                      {paginatedEmployees.map(emp => {
+                        const score = getLatestScore(emp.id!);
+                        return (
+                          <motion.tr 
+                            layout
+                            key={emp.id} 
                             onClick={() => navigate(`/details/${emp.id}`)}
-                            className="p-2.5 bg-white text-primary border border-border-theme rounded-xl hover:bg-primary hover:text-white transition-all shadow-sm hover:shadow-md active:scale-90"
-                            title="عرض السجل"
+                            className={`group hover:bg-slate-50 transition-all cursor-pointer ${selectedEmployees.includes(emp.id!) ? 'bg-accent/5' : ''}`}
                           >
-                            <ChevronLeft size={16} />
-                          </button>
-                          <button 
-                            type="button"
-                            onClick={() => onEditEmployee(emp)}
-                            className="p-2.5 bg-white border border-border-theme rounded-xl text-text-muted hover:text-accent hover:border-accent transition-all shadow-sm hover:shadow-md active:scale-90"
-                            title="تعديل البيانات"
-                          >
-                            <FileEdit size={16} />
-                          </button>
-                          <button 
-                            type="button"
-                            onClick={() => handleDeleteEmployee(emp)}
-                            className="p-2.5 bg-red-50/50 border border-red-100 rounded-xl text-red-400 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all shadow-sm hover:shadow-md active:scale-90"
-                            title="حذف الموظف"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                            <td className="px-8 py-6" onClick={(e) => e.stopPropagation()}>
+                               <div className="flex items-center justify-center">
+                                <input 
+                                  type="checkbox" 
+                                  checked={selectedEmployees.includes(emp.id!)}
+                                  onChange={() => handleSelectOne(emp.id!)}
+                                  className="w-5 h-5 accent-accent rounded-lg cursor-pointer"
+                                />
+                               </div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div className="flex items-center gap-5">
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-lg shrink-0 border border-white shadow-lg relative transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 ${
+                                  score === null ? 'bg-slate-200 text-slate-500' :
+                                  score >= 90 ? 'bg-emerald-500 text-white' :
+                                  score >= 75 ? 'bg-blue-500 text-white' :
+                                  score >= 50 ? 'bg-amber-500 text-white' : 'bg-red-500 text-white'
+                                }`}>
+                                  {emp.name[0]}
+                                </div>
+                                <div>
+                                  <p className="font-black text-primary text-base leading-tight mb-1 group-hover:text-accent transition-colors">{emp.name}</p>
+                                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] opacity-60">
+                                    Strategic Asset • {emp.category === 'internal' ? 'رسمي' : 'متعاقد'}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div className="text-[13px] font-bold text-primary">{emp.department}</div>
+                              <div className="text-[11px] text-text-muted font-bold mt-1 opacity-60 tracking-tight italic uppercase">{emp.position}</div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <span className="font-mono text-[11px] font-black text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 group-hover:border-accent/40 group-hover:text-primary transition-all">
+                                {emp.employeeId}
+                              </span>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div className="flex items-center gap-3">
+                                 <div className="w-9 h-9 rounded-full bg-slate-200/50 flex items-center justify-center text-text-muted shrink-0 shadow-inner">
+                                    <Fingerprint size={16} />
+                                 </div>
+                                 <span className="text-[12px] font-bold text-primary">{emp.biometricId || '---'}</span>
+                              </div>
+                            </td>
+                            <td className="px-8 py-6 text-left">
+                              {score !== null ? (
+                                <div className="inline-flex items-center gap-4 bg-white px-4 py-2 rounded-2xl border border-border-theme shadow-sm group-hover:shadow-md transition-shadow">
+                                   <div className="flex flex-col items-end">
+                                     <span className="text-[9px] font-black text-text-muted opacity-40 uppercase tracking-[0.2em]">Rating Index</span>
+                                     <span className={`text-sm font-black ${
+                                       score >= 90 ? 'text-emerald-600' :
+                                       score >= 75 ? 'text-blue-600' : 'text-amber-600'
+                                     }`}>%{score.toFixed(1)}</span>
+                                   </div>
+                                   <div className={`w-3 h-3 rounded-full ${
+                                      score >= 90 ? 'bg-emerald-500 animate-pulse' :
+                                      score >= 75 ? 'bg-blue-500' : 'bg-amber-500'
+                                   }`} />
+                                </div>
+                              ) : (
+                                <span className="px-4 py-1.5 bg-slate-50 text-slate-300 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-100 italic shadow-inner">Pending Session</span>
+                              )}
+                            </td>
+                            <td className="px-8 py-6 text-left" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+                                <button
+                                  onClick={() => navigate(`/details/${emp.id}`)}
+                                  className="p-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all shadow-xl shadow-primary/10 hover:scale-110 active:scale-95"
+                                  title="التحليل الكامل"
+                                >
+                                  <BrainCircuit size={16} />
+                                </button>
+                                <button
+                                  onClick={() => onEditEmployee(emp)}
+                                  className="p-3 bg-white text-text-muted border border-border-theme rounded-xl hover:text-accent hover:border-accent transition-all shadow-sm hover:scale-110 active:scale-95"
+                                  title="تعديل سريع"
+                                >
+                                  <Settings size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteEmployee(emp)}
+                                  className="p-3 bg-red-50 text-red-400 border border-red-100 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm hover:scale-110 active:scale-95"
+                                  title="حذف السجل"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </motion.tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               
               {/* Enhanced Pagination Controls */}
               {totalPages > 1 && (
@@ -1339,8 +1316,8 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
               )}
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
         {/* Sidebar: Analytics & Charts */}
@@ -1495,8 +1472,7 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
           </AnimatePresence>
         </div>
       </div>
-    </div>
-  );
+    );
 }
 
 function StatCard({ icon, label, value, trend, color }: { icon: any, label: string, value: string, trend: string, color: string }) {
