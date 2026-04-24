@@ -890,117 +890,168 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
             <div className="overflow-x-auto min-h-[500px]">
               <table className="w-full text-right border-collapse">
                 <thead>
-                  <tr className="bg-slate-50/50 border-b-2 border-slate-100">
-                    <th className="px-12 py-8 text-[12px] font-black text-text-muted uppercase tracking-[0.2em]">الاسم والمنصب</th>
-                    <th className="px-12 py-8 text-[12px] font-black text-text-muted uppercase tracking-[0.2em] cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort('employeeId')}>الرقم الوظيفي {getSortIcon('employeeId')}</th>
-                    <th className="px-12 py-8 text-[12px] font-black text-text-muted uppercase tracking-[0.2em]">التنظيم الإداري</th>
-                    <th className="px-12 py-8 text-[12px] font-black text-text-muted uppercase tracking-[0.2em]">مؤشر الأداء الرسمي</th>
-                    <th className="px-12 py-8 text-[12px] font-black text-text-muted uppercase tracking-[0.2em]">البصمة البيومترية</th>
-                    <th className="px-12 py-8 text-[12px] font-black text-text-muted uppercase tracking-[0.2em] text-center">أدوات التحكم</th>
+                  <tr className="bg-slate-50/80 border-b-2 border-slate-100">
+                    <th className="px-12 py-8 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">الاسم والمنصب التخصصي</th>
+                    <th className="px-12 py-8 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort('employeeId')}>الرقم المرجعي {getSortIcon('employeeId')}</th>
+                    <th className="px-12 py-8 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">التنظيم الإداري</th>
+                    <th className="px-12 py-8 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">تتبع مؤشر الكفاءة</th>
+                    <th className="px-12 py-8 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em]">تزامن Cloud-Sync</th>
+                    <th className="px-12 py-8 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] text-center">الإجراءات</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white/40">
-                  <AnimatePresence>
-                    {paginatedEmployees.map((emp, idx) => {
-                       const score = getLatestScore(emp.id!);
-                       return (
-                         <motion.tr 
-                          key={emp.id} 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.04 }}
-                          className="group hover:bg-slate-100 transition-all cursor-default"
-                         >
-                            <td className="px-12 py-10">
-                               <div className="flex items-center gap-8">
-                                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-xl font-black text-primary border border-slate-200 group-hover:scale-110 group-hover:rotate-3 transition-all shadow-sm">
-                                     {emp.name[0]}
-                                  </div>
-                                  <div>
-                                     <div className="text-[17px] font-black text-primary group-hover:text-accent transition-colors">{emp.name}</div>
-                                     <div className="text-[12px] font-bold text-text-muted mt-2 flex items-center gap-2 opacity-60">
-                                        <Award size={16} className="text-accent" /> {emp.position}
-                                     </div>
-                                  </div>
-                               </div>
-                            </td>
-                            <td className="px-12 py-10">
-                               <span className="font-mono text-xs font-black text-slate-400 bg-slate-50 px-5 py-3 rounded-xl border border-slate-200 select-all group-hover:border-primary group-hover:text-primary transition-colors">{emp.employeeId}</span>
-                            </td>
-                            <td className="px-12 py-10">
-                               <div className="space-y-3">
-                                  <div className="text-[14px] font-black text-primary flex items-center gap-3">
-                                     <div className="w-2 h-2 rounded-full bg-accent" /> {emp.department}
-                                  </div>
-                                  {emp.secondDepartment && (
-                                     <div className="text-[11px] font-black text-emerald-600 bg-emerald-50 px-4 py-1.5 rounded-lg border border-emerald-100/50 inline-block font-sans">Assignment: {emp.secondDepartment}</div>
-                                  )}
-                               </div>
-                            </td>
-                            <td className="px-12 py-10">
-                               {score !== null ? (
-                                  <div className="flex items-center gap-6">
-                                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-[13px] font-black border-2 shadow-inner ${
-                                        score >= 90 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                        score >= 75 ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                                        score >= 50 ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                        'bg-red-50 text-red-600 border-red-100'
-                                     }`}>
-                                        %{score.toFixed(0)}
-                                     </div>
-                                     <div className="flex-1 min-w-[100px]">
-                                        <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">
-                                           <motion.div 
-                                             initial={{ width: 0 }}
-                                             animate={{ width: `${score}%` }}
-                                             className={`h-full ${score >= 90 ? 'bg-emerald-500' : score >= 75 ? 'bg-blue-500' : 'bg-red-500'} shadow-[0_0_15px_rgba(0,0,0,0.1)]`} 
-                                           />
-                                        </div>
-                                        <div className="text-[10px] font-black text-text-muted mt-3 uppercase tracking-widest opacity-40">Ministerial Tier: {score >= 90 ? 'Excellent' : 'Standard'}</div>
-                                     </div>
-                                  </div>
-                               ) : (
-                                  <div className="flex items-center gap-4 text-slate-300">
-                                     <Calendar size={20} />
-                                     <span className="text-[12px] font-bold italic">دورة لم يتم رصدها</span>
-                                  </div>
-                               )}
-                            </td>
-                            <td className="px-12 py-10">
-                               <div className={`inline-flex items-center gap-4 px-6 py-3 rounded-2xl border-2 transition-all ${
-                                  emp.biometricStatus === 'online' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-100 text-red-700 border-red-200'
-                               }`}>
-                                  <div className={`w-2.5 h-2.5 rounded-full ${emp.biometricStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]' : 'bg-red-500'}`} />
-                                  <span className="text-[12px] font-black uppercase tracking-tight">{emp.biometricStatus === 'online' ? 'Cloud-Synced' : 'Offline'}</span>
+                  <AnimatePresence mode="popLayout">
+                    {paginatedEmployees.length > 0 ? (
+                      paginatedEmployees.map((emp, idx) => {
+                        const score = getLatestScore(emp.id!);
+                        return (
+                          <motion.tr 
+                            key={emp.id} 
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ delay: idx * 0.03, ease: "circOut" }}
+                            className="group hover:bg-slate-50 transition-all cursor-default"
+                          >
+                             <td className="px-12 py-8">
+                                <div className="flex items-center gap-8">
+                                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black border transition-all shadow-sm ${
+                                      emp.type === 'technical' ? 'bg-primary/5 border-primary/10 text-primary' : 'bg-slate-50 border-slate-100 text-slate-500'
+                                   } group-hover:scale-105 group-hover:shadow-md`}>
+                                      {emp.name[0]}
+                                   </div>
+                                   <div>
+                                      <div className="text-[15px] font-black text-primary group-hover:translate-x-1 transition-transform">{emp.name}</div>
+                                      <div className="flex items-center gap-2 mt-1.5">
+                                         <div className={`w-1.5 h-1.5 rounded-full ${emp.type === 'technical' ? 'bg-blue-500' : 'bg-slate-400'}`} />
+                                         <span className="text-[11px] font-bold text-text-muted opacity-60 uppercase">{emp.position}</span>
+                                      </div>
+                                   </div>
                                 </div>
-                            </td>
-                            <td className="px-12 py-10">
-                               <div className="flex items-center justify-center gap-4">
-                                  <button 
-                                    onClick={() => navigate(`/details/${emp.id}`)}
-                                    className="p-4 bg-white text-primary border border-slate-200 hover:bg-primary hover:text-white hover:border-primary rounded-2xl transition-all shadow-sm hover:shadow-xl hover:-translate-y-1"
-                                    title="تحليل الملف الكامل"
-                                  >
-                                    <BrainCircuit size={20} />
-                                  </button>
-                                  <button 
-                                    onClick={() => onEditEmployee(emp)}
-                                    className="p-4 bg-white text-slate-500 border border-slate-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-2xl transition-all shadow-sm hover:shadow-xl hover:-translate-y-1"
-                                    title="تحديث البيانات المعيارية"
-                                  >
-                                    <FileEdit size={20} />
-                                  </button>
-                                  <button 
-                                    onClick={() => onEvaluateUser(emp)}
-                                    className="px-8 py-4 bg-accent text-primary text-[12px] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-accent/20 hover:bg-white hover:border-accent border border-transparent"
-                                  >
-                                    توليد تقييم
-                                  </button>
-                               </div>
-                            </td>
-                         </motion.tr>
-                       );
-                    })}
+                             </td>
+                             <td className="px-12 py-10">
+                                <div className="flex items-center gap-3">
+                                   <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
+                                      <Hash size={14} />
+                                   </div>
+                                   <span className="font-mono text-[13px] font-black text-slate-500 select-all tracking-wider">{emp.employeeId}</span>
+                                </div>
+                             </td>
+                             <td className="px-12 py-10">
+                                <div className="space-y-2">
+                                   <div className="text-[13px] font-black text-primary hover:text-accent transition-colors cursor-pointer flex items-center gap-2">
+                                      <Building2 size={14} className="opacity-40" />
+                                      {emp.department}
+                                   </div>
+                                   {emp.secondDepartment && (
+                                      <div className="flex items-center gap-2">
+                                         <div className="h-4 w-[2px] bg-emerald-500/30 mr-1" />
+                                         <div className="text-[10px] font-black text-emerald-600/70 uppercase tracking-tight">{emp.secondDepartment}</div>
+                                      </div>
+                                   )}
+                                </div>
+                             </td>
+                             <td className="px-12 py-10">
+                                {score !== null ? (
+                                   <div className="flex items-center gap-5">
+                                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-[12px] font-black border transition-colors ${
+                                         score >= 90 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                         score >= 75 ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                         score >= 50 ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                         'bg-red-50 text-red-600 border-red-100'
+                                      }`}>
+                                         %{score.toFixed(0)}
+                                      </div>
+                                      <div className="flex-1 min-w-[80px]">
+                                         <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+                                            <motion.div 
+                                              initial={{ width: 0 }}
+                                              animate={{ width: `${score}%` }}
+                                              className={`h-full ${getScoreBg(score)}`} 
+                                            />
+                                         </div>
+                                         <div className="flex justify-between items-center mt-2">
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{score >= 90 ? 'Superior' : score >= 75 ? 'Standard' : 'Risk'}</span>
+                                            {perfAlerts.some(a => a.employee.id === emp.id) && (
+                                               <AlertTriangle size={10} className="text-red-500 animate-pulse" />
+                                            )}
+                                         </div>
+                                      </div>
+                                   </div>
+                                ) : (
+                                   <div className="flex items-center gap-3 text-slate-300">
+                                      <div className="w-10 h-10 rounded-xl bg-slate-50 border border-dashed border-slate-200 flex items-center justify-center">
+                                         <Calendar size={16} />
+                                      </div>
+                                      <span className="text-[11px] font-bold italic opacity-60">بإنتظار الجدولة</span>
+                                   </div>
+                                )}
+                             </td>
+                             <td className="px-12 py-10">
+                                <div className={`inline-flex items-center gap-3 px-5 py-2.5 rounded-xl border transition-all ${
+                                   emp.biometricStatus === 'online' ? 'bg-emerald-500/5 text-emerald-600 border-emerald-500/10' : 'bg-red-500/5 text-red-600 border-red-500/10'
+                                }`}>
+                                   <div className={`w-2 h-2 rounded-full ${emp.biometricStatus === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+                                   <span className="text-[11px] font-black uppercase tracking-tighter">{emp.biometricStatus === 'online' ? 'Synced' : 'Offline'}</span>
+                                 </div>
+                             </td>
+                             <td className="px-12 py-10">
+                                <div className="flex items-center justify-center gap-3">
+                                   <button 
+                                     onClick={() => navigate(`/details/${emp.id}`)}
+                                     className="w-10 h-10 flex items-center justify-center bg-white text-primary border border-slate-200 hover:bg-primary hover:text-white hover:border-primary rounded-xl transition-all shadow-sm hover:shadow-lg"
+                                     title="تحليل الملف الكامل"
+                                   >
+                                     <Eye size={16} />
+                                   </button>
+                                   <button 
+                                     onClick={() => onEditEmployee(emp)}
+                                     className="w-10 h-10 flex items-center justify-center bg-white text-slate-500 border border-slate-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-xl transition-all shadow-sm hover:shadow-lg"
+                                     title="تعديل البيانات"
+                                   >
+                                     <FileEdit size={16} />
+                                   </button>
+                                   <button 
+                                     onClick={() => onEvaluateUser(emp)}
+                                     className="h-10 px-6 bg-accent text-primary text-[11px] font-black rounded-xl hover:bg-white border border-transparent hover:border-accent transition-all shadow-lg shadow-accent/10 whitespace-nowrap"
+                                   >
+                                     بدء تقييم
+                                   </button>
+                                </div>
+                             </td>
+                          </motion.tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="py-32 text-center">
+                           <motion.div 
+                             initial={{ opacity: 0, scale: 0.9 }}
+                             animate={{ opacity: 1, scale: 1 }}
+                             className="flex flex-col items-center justify-center gap-6"
+                           >
+                              <div className="w-24 h-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center text-slate-200 border border-dashed border-slate-200">
+                                 <Search size={40} />
+                              </div>
+                              <div className="space-y-2">
+                                 <h4 className="text-xl font-black text-primary">لا توجد نتائج مطابقة</h4>
+                                 <p className="text-[12px] font-bold text-text-muted opacity-60">يرجى التحقق من معايير البحث أو اختيار قطاع آخر</p>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  setSearchTerm('');
+                                  setSelectedType('all');
+                                  setSelectedCategory('all');
+                                  setDepartmentFilter('all');
+                                }}
+                                className="mt-4 px-8 py-3 bg-white border border-slate-200 rounded-xl text-[11px] font-black text-primary hover:bg-slate-50 transition-all flex items-center gap-3"
+                              >
+                                 <RefreshCw size={14} /> إعادة ضبط الفلاتر
+                              </button>
+                           </motion.div>
+                        </td>
+                      </tr>
+                    )}
                   </AnimatePresence>
                 </tbody>
               </table>

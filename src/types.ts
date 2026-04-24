@@ -22,6 +22,8 @@ export interface Employee {
   joinDate: string;
   secondDepartment?: string;
   customCriteria?: { label: string; weight: number; description?: string }[];
+  attendanceHistory?: any[]; // Added for lint fix
+  notes?: string;           // Added for lint fix
 }
 
 export interface EvaluationCriteria {
@@ -34,6 +36,7 @@ export interface EvaluationCriteria {
 export interface Evaluation {
   id?: number;
   employeeId: number;
+  evaluatorId?: number; // Added for lint fix
   period: EvaluationPeriod;
   date: string;
   year: number;
@@ -70,7 +73,8 @@ export interface User {
   username: string;
   password: string;
   fullName: string;
-  role: 'admin' | 'evaluator';
+  email?: string;
+  role: 'admin' | 'evaluator' | 'manager';
   department?: string;
   dashboardSettings?: DashboardSettings;
 }
@@ -96,6 +100,24 @@ export interface EvaluationModel {
     description: string;
   }[];
 }
+
+export const DEPARTMENTS = [
+  'المكتب الفني',
+  'نظم المعلومات',
+  'الأمن السيبراني',
+  'ادارة العلاقات العامة والإعلام',
+  'ادارة الموافقة النوعية',
+  'الشؤون القانونية',
+  'الشؤون المالية',
+  'الإدارة العامة',
+  'التخطيط',
+  'إدارة الموارد البشرية',
+  'إدارة الرقابة والتفتيش',
+  'الجودة والمقاييس',
+  'الأمن والحراسات',
+  'السلامة المهنية',
+  'الخدمات العامة والصيانة'
+];
 
 export interface HRSystemConfig {
   id?: number;
