@@ -51,15 +51,20 @@ import NotificationTray from './components/NotificationTray.tsx';
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'employees' | 'users' | 'reports' | 'strategic'>('dashboard');
+  const [activeTab, setActiveTab] = useState<string>('dashboard');
 
   useEffect(() => {
     const path = location.pathname;
     if (path === '/') setActiveTab('dashboard');
+    else if (path === '/structure') setActiveTab('structure');
     else if (path === '/employees') setActiveTab('employees');
+    else if (path === '/forms') setActiveTab('forms');
+    else if (path === '/cycles') setActiveTab('cycles');
+    else if (path === '/evaluations') setActiveTab('evaluations');
+    else if (path === '/comparisons') setActiveTab('comparisons');
     else if (path === '/reports') setActiveTab('reports');
-    else if (path === '/users') setActiveTab('users');
-    else if (path === '/strategic') setActiveTab('strategic');
+    else if (path === '/alerts') setActiveTab('alerts');
+    else if (path === '/settings') setActiveTab('settings');
     else if (path.startsWith('/details')) setActiveTab('employees');
   }, [location.pathname]);
 
@@ -550,7 +555,8 @@ export default function App() {
         </div>
 
         <nav className="flex-1 py-10 px-4 space-y-2 overflow-y-auto no-scrollbar scroll-smooth relative z-10">
-          <div className={`text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-4 px-4 transition-opacity duration-500 ${isSidebarOpen ? 'opacity-100' : 'opacity-0'}`}>Executive Modules</div>
+          <div className={`text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-4 px-4 transition-opacity duration-500 ${isSidebarOpen ? 'opacity-100' : 'opacity-0'}`}>بوابات النظام الاستراتيجي</div>
+          
           <RailNavItem 
             active={activeTab === 'dashboard'} 
             expanded={isSidebarOpen}
@@ -559,34 +565,67 @@ export default function App() {
             label="لوحة التحكم"
           />
           <RailNavItem 
+            active={activeTab === 'structure'} 
+            expanded={isSidebarOpen}
+            onClick={() => navigate('/structure')}
+            icon={<Building2 size={22} />}
+            label="هيكل الوزارة"
+          />
+          <RailNavItem 
             active={activeTab === 'employees'} 
             expanded={isSidebarOpen}
             onClick={() => navigate('/employees')}
             icon={<Users size={22} />}
-            label="قاعدة بيانات الكادر"
+            label="إدارة الموظفين"
           />
-          {currentUser.role === 'admin' && (
-            <RailNavItem 
-              active={activeTab === 'users'} 
-              expanded={isSidebarOpen}
-              onClick={() => navigate('/users')}
-              icon={<ShieldCheck size={22} />}
-              label="إدارة المستخدمين"
-            />
-          )}
           <RailNavItem 
-            active={activeTab === 'strategic'} 
+            active={activeTab === 'forms'} 
             expanded={isSidebarOpen}
-            onClick={() => navigate('/strategic')}
-            icon={<BrainCircuit size={22} />}
-            label="الذكاء الاستراتيجي"
+            onClick={() => navigate('/forms')}
+            icon={<ClipboardList size={22} />}
+            label="نماذج التقييم"
+          />
+          <RailNavItem 
+            active={activeTab === 'cycles'} 
+            expanded={isSidebarOpen}
+            onClick={() => navigate('/cycles')}
+            icon={<TrendingUp size={22} />}
+            label="دورات التقييم"
+          />
+          <RailNavItem 
+            active={activeTab === 'evaluations'} 
+            expanded={isSidebarOpen}
+            onClick={() => navigate('/evaluations')}
+            icon={<Award size={22} />}
+            label="التقييمات المنجزة"
+          />
+          <RailNavItem 
+            active={activeTab === 'comparisons'} 
+            expanded={isSidebarOpen}
+            onClick={() => navigate('/comparisons')}
+            icon={<BarChart3 size={22} />}
+            label="المقارنات"
           />
           <RailNavItem 
             active={activeTab === 'reports'} 
             expanded={isSidebarOpen}
             onClick={() => navigate('/reports')}
             icon={<PieChart size={22} />}
-            label="تقارير الإدارات"
+            label="التقارير"
+          />
+          <RailNavItem 
+            active={activeTab === 'alerts'} 
+            expanded={isSidebarOpen}
+            onClick={() => navigate('/alerts')}
+            icon={<AlertTriangle size={22} />}
+            label="التنبيهات"
+          />
+          <RailNavItem 
+            active={activeTab === 'settings'} 
+            expanded={isSidebarOpen}
+            onClick={() => navigate('/settings')}
+            icon={<Settings size={22} />}
+            label="الإعدادات"
           />
         </nav>
 
@@ -716,18 +755,30 @@ export default function App() {
                >
                  <div className="w-1.5 h-6 bg-accent rounded-full" />
                  <h2 className="text-2xl font-black text-primary tracking-tight">
-                    {activeTab === 'dashboard' ? 'لوحة التحكم الكاملة' : 
-                     activeTab === 'employees' ? 'إدارة بيانات القوة البشرية' : 
-                     activeTab === 'reports' ? 'التقارير التحليلية والمؤشرات' : 
-                     'إدارة الهوية والصلاحيات'}
+                    {activeTab === 'dashboard' ? 'لوحة التحكم الاستراتيجية' : 
+                     activeTab === 'structure' ? 'الهيكل التنظيمي للوزارة' :
+                     activeTab === 'employees' ? 'إدارة القوة البشرية' : 
+                     activeTab === 'forms' ? 'مكتبة نماذج التقييم المعيارية' :
+                     activeTab === 'cycles' ? 'إدارة دورات التقييم الزمنية' :
+                     activeTab === 'evaluations' ? 'سجل النتائج والتقييمات' :
+                     activeTab === 'comparisons' ? 'تحليل المقارنات البينية' :
+                     activeTab === 'reports' ? 'التقارير النوعية والمؤشرات' : 
+                     activeTab === 'alerts' ? 'مركز التنبيهات والإنذار المبكر' :
+                     'إعدادات النظام والتحكم'}
                  </h2>
                </motion.div>
                <p className="text-[12px] text-text-muted font-bold opacity-70">
-                  {activeTab === 'dashboard' ? 'نظرة عامة على مؤشرات الأداء وتنبيهات النظام' : 
-                   activeTab === 'employees' ? 'السجل الإلكتروني الشامل لكادر الوزارة' : 
-                   activeTab === 'reports' ? 'تحليل التنافسية والإنجاز على مستوى القطاعات' : 
-                   'إعداد الحسابات وصلاحيات الوصول للنظام'}
-               </p>
+                  {activeTab === 'dashboard' ? 'نظرة شمولية على كفاءة الأداء المؤسسي' : 
+                   activeTab === 'structure' ? 'عرض وتعديل التقسيمات الإدارية والقطاعات' :
+                   activeTab === 'employees' ? 'بيانات الكادر، التوزيع، وحالة الاتصال' : 
+                   activeTab === 'forms' ? 'تخصيص نماذج التقييم حسب الفئات الوظيفية' :
+                   activeTab === 'cycles' ? 'تخطيط ومتابعة الفترات التقييمية النشطة' :
+                   activeTab === 'evaluations' ? 'استعراض وأرشفة كافة التقييمات المنجزة' :
+                   activeTab === 'comparisons' ? 'مقارنة الأداء بين الموظفين والقطاعات' :
+                   activeTab === 'reports' ? 'تصدير وتحليل البيانات التشغيلية' : 
+                   activeTab === 'alerts' ? 'مراقبة هبوط المستوى والمخاطر الإدارية' :
+                  'ضبط الخصوصية، المستخدمين، والقواعد الحاكمة'}
+              </p>
             </div>
 
             <div className="flex-1">
@@ -742,6 +793,7 @@ export default function App() {
                     onEvaluateUser={(emp) => setSelectedEmployee(emp)}
                   />
                 } />
+                <Route path="/structure" element={<StrategicDashboard />} />
                 <Route path="/employees" element={
                   <Dashboard 
                     user={currentUser}
@@ -752,18 +804,13 @@ export default function App() {
                     onEvaluateUser={(emp) => setSelectedEmployee(emp)}
                   />
                 } />
+                <Route path="/forms" element={<StrategicDashboard />} />
+                <Route path="/cycles" element={<StrategicDashboard />} />
+                <Route path="/evaluations" element={<StrategicDashboard />} />
+                <Route path="/comparisons" element={<StrategicDashboard />} />
                 <Route path="/reports" element={<DepartmentReports />} />
-                <Route path="/users" element={
-                  currentUser?.role === 'admin' ? <UserManagement /> : <Dashboard 
-                    user={currentUser} 
-                    onUpdateUser={handleLogin} 
-                    refreshTrigger={refreshTrigger} 
-                    onAddEmployee={() => { setEditingEmployee(null); setShowAddEmployee(true); }} 
-                    onEditEmployee={(emp) => { setEditingEmployee(emp); setShowAddEmployee(true); }}
-                    onEvaluateUser={(emp) => setSelectedEmployee(emp)} 
-                  />
-                } />
-                <Route path="/strategic" element={<StrategicDashboard />} />
+                <Route path="/alerts" element={<StrategicDashboard />} />
+                <Route path="/settings" element={<UserManagement />} />
                 <Route path="/details/:id" element={
                   <EmployeeDetails 
                     onEditEmployee={(emp) => { setEditingEmployee(emp); setShowAddEmployee(true); }}

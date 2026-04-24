@@ -758,6 +758,252 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
             <FingerprintIntegration />
           </div>
         );
+      case 'employee-table':
+        return (
+          <div key={widgetId} id="employee-table" className="card-modern overflow-hidden mt-8 border-none secure-glow relative z-10">
+            <div className="p-10 border-b border-border-theme flex flex-col lg:flex-row lg:items-center justify-between gap-8 bg-white/50 backdrop-blur-md">
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                    <span className="text-[11px] font-black text-accent uppercase tracking-[0.3em]">Workforce Integrity Hub</span>
+                  </div>
+                  <h3 className="text-4xl font-black text-primary tracking-tighter leading-none mb-2">إدارة القوة البشرية والبيانات البيومترية</h3>
+                  <p className="text-[13px] font-bold text-text-muted opacity-60">تتبع حي لأداء الكادر الوظيفي وتكامل أجهزة البصمة الذكية للحوسبة السحابية</p>
+                </div>
+                <div className="flex flex-wrap gap-4 items-center">
+                   <div className="relative group min-w-[320px]">
+                      <Search className="absolute right-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={20} />
+                      <input 
+                        type="text" 
+                        placeholder="البحث الذكي بالاسم أو الرقم..." 
+                        className="w-full pr-14 pl-6 py-5 bg-slate-50/50 border border-border-theme rounded-2xl text-[13px] font-bold outline-none focus:bg-white focus:border-primary focus:ring-8 focus:ring-primary/5 transition-all shadow-inner"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                   </div>
+                   <button 
+                     onClick={handleExportEmployeesCSV}
+                     className="px-8 h-[60px] bg-white border border-border-theme rounded-2xl text-[12px] font-black hover:bg-slate-50 transition-all flex items-center gap-4 shadow-sm hover:shadow-md group"
+                   >
+                     <FileDown size={20} className="text-accent group-hover:-translate-y-1 transition-transform" /> تصدير السجلات
+                   </button>
+                </div>
+            </div>
+
+            {/* Premium Filter Orchestra */}
+            <div className="p-8 bg-slate-50/30 border-b border-border-theme flex flex-wrap items-center gap-10">
+               <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center text-accent">
+                    <Filter size={18} />
+                  </div>
+                  <span className="text-[12px] font-black text-primary uppercase tracking-widest">تصفية المعايير:</span>
+               </div>
+               
+               <div className="flex items-center gap-8 flex-1">
+                 <div className="space-y-2">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest opacity-50 block mr-2">إدارة القسم</label>
+                    <select 
+                      className="bg-white border border-border-theme px-6 py-3 rounded-xl text-[12px] font-bold outline-none cursor-pointer focus:border-primary hover:border-accent transition-colors shadow-sm"
+                      value={departmentFilter}
+                      onChange={(e) => setDepartmentFilter(e.target.value)}
+                    >
+                      <option value="all">كافة الإدارات الوزارية</option>
+                      {departments.map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                 </div>
+
+                 <div className="space-y-2">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest opacity-50 block mr-2">التصنيف الفني</label>
+                    <select 
+                      className="bg-white border border-border-theme px-6 py-3 rounded-xl text-[12px] font-bold outline-none cursor-pointer focus:border-primary hover:border-accent transition-colors shadow-sm"
+                      value={selectedType}
+                      onChange={(e) => setSelectedType(e.target.value as any)}
+                    >
+                      <option value="all">كامل التصنيفات</option>
+                      <option value="technical">كادر فني متخصص</option>
+                      <option value="non-technical">كادر إداري ومعاون</option>
+                    </select>
+                 </div>
+
+                 <div className="space-y-2">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest opacity-50 block mr-2">الفئة الوظيفية</label>
+                    <select 
+                      className="bg-white border border-border-theme px-6 py-3 rounded-xl text-[12px] font-bold outline-none cursor-pointer focus:border-primary hover:border-accent transition-colors shadow-sm"
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value as any)}
+                    >
+                      <option value="all">كافة الفئات</option>
+                      <option value="internal">موظف دائم</option>
+                      <option value="consultant">مستشار خبير</option>
+                      <option value="contractor">نظام العقود</option>
+                    </select>
+                 </div>
+               </div>
+            </div>
+
+            <div className="overflow-x-auto min-h-[500px]">
+              <table className="w-full text-right border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/50 border-b-2 border-slate-100">
+                    <th className="px-10 py-6 text-[11px] font-black text-text-muted uppercase tracking-[0.2em]">الاسم والمنصب</th>
+                    <th className="px-10 py-6 text-[11px] font-black text-text-muted uppercase tracking-[0.2em] cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort('employeeId')}>الرقم الوظيفي {getSortIcon('employeeId')}</th>
+                    <th className="px-10 py-6 text-[11px] font-black text-text-muted uppercase tracking-[0.2em]">التنظيم الإداري</th>
+                    <th className="px-10 py-6 text-[11px] font-black text-text-muted uppercase tracking-[0.2em]">مؤشر الأداء الرسمي</th>
+                    <th className="px-10 py-6 text-[11px] font-black text-text-muted uppercase tracking-[0.2em]">البصمة البيومترية</th>
+                    <th className="px-10 py-6 text-[11px] font-black text-text-muted uppercase tracking-[0.2em] text-center">أدوات التحكم</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white/40">
+                  <AnimatePresence>
+                    {paginatedEmployees.map((emp, idx) => {
+                       const score = getLatestScore(emp.id!);
+                       return (
+                         <motion.tr 
+                          key={emp.id} 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.04 }}
+                          className="group hover:bg-slate-50/80 transition-all cursor-default"
+                         >
+                            <td className="px-10 py-8">
+                               <div className="flex items-center gap-6">
+                                  <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-lg font-black text-primary border border-slate-200 group-hover:scale-110 group-hover:rotate-3 transition-all shadow-sm">
+                                     {emp.name[0]}
+                                  </div>
+                                  <div>
+                                     <div className="text-base font-black text-primary group-hover:text-accent transition-colors">{emp.name}</div>
+                                     <div className="text-[11px] font-bold text-text-muted mt-1 flex items-center gap-2 opacity-60">
+                                        <Award size={14} className="text-accent" /> {emp.position}
+                                     </div>
+                                  </div>
+                               </div>
+                            </td>
+                            <td className="px-10 py-8">
+                               <span className="font-mono text-xs font-black text-slate-400 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 select-all group-hover:border-primary group-hover:text-primary transition-colors">{emp.employeeId}</span>
+                            </td>
+                            <td className="px-10 py-8">
+                               <div className="space-y-2">
+                                  <div className="text-[13px] font-black text-primary flex items-center gap-3">
+                                     <div className="w-1.5 h-1.5 rounded-full bg-accent" /> {emp.department}
+                                  </div>
+                                  {emp.secondDepartment && (
+                                     <div className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100/50 inline-block">دائرة إضافية: {emp.secondDepartment}</div>
+                                  )}
+                               </div>
+                            </td>
+                            <td className="px-10 py-8">
+                               {score !== null ? (
+                                  <div className="flex items-center gap-5">
+                                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-[12px] font-black border-2 shadow-inner ${
+                                        score >= 90 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                        score >= 75 ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                        score >= 50 ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                        'bg-red-50 text-red-600 border-red-100'
+                                     }`}>
+                                        %{score.toFixed(0)}
+                                     </div>
+                                     <div className="flex-1 min-w-[80px]">
+                                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">
+                                           <motion.div 
+                                             initial={{ width: 0 }}
+                                             animate={{ width: `${score}%` }}
+                                             className={`h-full ${score >= 90 ? 'bg-emerald-500' : score >= 75 ? 'bg-blue-500' : 'bg-red-500'} shadow-[0_0_10px_rgba(0,0,0,0.1)]`} 
+                                           />
+                                        </div>
+                                        <div className="text-[9px] font-black text-text-muted mt-2 uppercase tracking-widest opacity-40">Performance Tier: {score >= 90 ? 'Excellence' : 'Standard'}</div>
+                                     </div>
+                                  </div>
+                               ) : (
+                                  <div className="flex items-center gap-3 text-slate-300">
+                                     <Calendar size={16} />
+                                     <span className="text-[11px] font-bold italic">بانتظار دورة التقييم</span>
+                                  </div>
+                               )}
+                            </td>
+                            <td className="px-10 py-8">
+                               <div className={`inline-flex items-center gap-3 px-4 py-2 rounded-2xl border-2 transition-all ${
+                                  emp.biometricStatus === 'online' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-100 text-red-700 border-red-200 animate-pulse'
+                               }`}>
+                                  <div className={`w-2 h-2 rounded-full ${emp.biometricStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`} />
+                                  <span className="text-[11px] font-black uppercase tracking-tight">{emp.biometricStatus === 'online' ? 'Synced-Cloud' : 'Desynced'}</span>
+                               </div>
+                            </td>
+                            <td className="px-10 py-8">
+                               <div className="flex items-center justify-center gap-3">
+                                  <button 
+                                    onClick={() => navigate(`/details/${emp.id}`)}
+                                    className="p-3 bg-white text-primary border border-slate-200 hover:bg-primary hover:text-white hover:border-primary rounded-2xl transition-all shadow-sm hover:shadow-xl hover:-translate-y-1"
+                                    title="تحليل الملف الكامل"
+                                  >
+                                    <BrainCircuit size={18} />
+                                  </button>
+                                  <button 
+                                    onClick={() => onEditEmployee(emp)}
+                                    className="p-3 bg-white text-slate-500 border border-slate-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-2xl transition-all shadow-sm hover:shadow-xl hover:-translate-y-1"
+                                    title="تحديث البيانات المعيارية"
+                                  >
+                                    <FileEdit size={18} />
+                                  </button>
+                                  <button 
+                                    onClick={() => onEvaluateUser(emp)}
+                                    className="px-6 py-3 bg-accent text-primary text-[11px] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-accent/20 hover:bg-white hover:border-accent border border-transparent"
+                                  >
+                                    توليد تقييم
+                                  </button>
+                               </div>
+                            </td>
+                         </motion.tr>
+                       );
+                    })}
+                  </AnimatePresence>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Premium Strategic Pagination */}
+            <div className="p-10 border-t border-slate-100 bg-slate-50/50 flex flex-col md:flex-row items-center justify-between gap-8">
+               <div className="flex items-center gap-6">
+                  <div className="text-[12px] font-black text-text-muted uppercase tracking-[0.3em] opacity-40">Workforce Statistics:</div>
+                  <div className="px-6 py-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                    <span className="text-[12px] font-black text-primary">عرض {paginatedEmployees.length} سجل ذكي</span>
+                    <span className="mx-3 opacity-20">|</span>
+                    <span className="text-[12px] font-black text-accent">إجمالي {filteredEmployees.length}</span>
+                  </div>
+               </div>
+               <div className="flex items-center gap-4">
+                  <button 
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => prev - 1)}
+                    className="w-14 h-14 bg-white border border-slate-200 rounded-2xl flex items-center justify-center hover:bg-primary hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                  <div className="flex gap-3 bg-white/50 p-2 rounded-[2rem] border border-white shadow-inner">
+                     {[...Array(totalPages)].map((_, i) => (
+                        <button 
+                          key={i}
+                          onClick={() => setCurrentPage(i + 1)}
+                          className={`w-12 h-12 rounded-2xl text-xs font-black transition-all ${
+                            currentPage === i + 1 ? 'bg-primary text-white shadow-2xl shadow-primary/30 scale-110' : 'bg-white border border-slate-100 text-text-muted hover:bg-slate-50 shadow-sm'
+                          }`}
+                        >
+                          {i + 1}
+                        </button>
+                     ))}
+                  </div>
+                  <button 
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(prev => prev + 1)}
+                    className="w-14 h-14 bg-white border border-slate-200 rounded-2xl flex items-center justify-center hover:bg-primary hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+               </div>
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -882,6 +1128,58 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
         )}
       </AnimatePresence>
 
+      {/* Executive KPI Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 relative">
+        <StatCard 
+          icon={<Users className="w-6 h-6" />}
+          label="إجمالي القوة البشرية"
+          value={employees.length.toString()}
+          trend="الكادر الكلي"
+          color="bg-[#1e293b]"
+        />
+        <StatCard 
+          icon={<Cpu className="w-6 h-6" />}
+          label="الكادر الفني"
+          value={employees.filter(e => e.type === 'technical').length.toString()}
+          trend="متخصص"
+          color="bg-blue-600"
+        />
+        <StatCard 
+          icon={<Users className="w-6 h-6" />}
+          label="الكادر الإداري"
+          value={employees.filter(e => e.type === 'non-technical').length.toString()}
+          trend="إداري ومعاون"
+          color="bg-slate-500"
+        />
+        <StatCard 
+          icon={<CheckCircle2 className="w-6 h-6" />}
+          label="تقييمات هـذا الشهر"
+          value={evaluations.filter(e => {
+            const now = new Date();
+            return (e.month || (new Date(e.date).getMonth() + 1)) === (now.getMonth() + 1) && e.year === now.getFullYear();
+          }).length.toString()}
+          trend="منجزة"
+          color="bg-emerald-600"
+        />
+        <StatCard 
+          icon={<RefreshCw className="w-6 h-6" />}
+          label="تقييمات متبقية"
+          value={Math.max(0, employees.length - evaluations.filter(e => {
+            const now = new Date();
+            return (e.month || (new Date(e.date).getMonth() + 1)) === (now.getMonth() + 1) && e.year === now.getFullYear();
+          }).length).toString()}
+          trend="قيد الإنجاز"
+          color="bg-amber-600"
+        />
+        <StatCard 
+          icon={<AlertTriangle className="w-6 h-6" />}
+          label="تنبيهات الأداء"
+          value={perfAlerts.length.toString()}
+          trend="تتطلب تدخلاً"
+          color="bg-red-600"
+        />
+      </div>
+
       {/* Real-time System Overview Pulse */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 px-2">
         <div className="lg:col-span-3 flex items-center gap-6 p-6 bg-slate-50/50 rounded-[2rem] border border-slate-200/50 backdrop-blur-sm">
@@ -914,565 +1212,197 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        {settings.widgetOrder
-          .filter(id => id.startsWith('stat-'))
-          .map(id => renderWidget(id))}
-      </div>
+      {/* Dynamic Widgets Area */}
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="dashboard-widgets" direction="vertical">
+          {(provided) => (
+            <div 
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+            >
+              {settings.widgetOrder.map((widgetId, index) => {
+                // Skip stat cards as they are now in the header KPI grid
+                if (widgetId.startsWith('stat-')) return null;
+                
+                const widget = renderWidget(widgetId);
+                if (!widget) return null;
 
-      {/* General Widgets (Performance Summary, etc.) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {settings.widgetOrder
-          .filter(id => id === 'perf-summary')
-          .map(id => renderWidget(id))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-3 space-y-12">
-          {/* Main Chart Section */}
-          {settings.widgetOrder
-            .filter(id => id === 'main-chart')
-            .map(id => renderWidget(id))}
-
-          {/* Employee Table Section - Operational Readiness Division */}
-          {settings.visibleWidgets.includes('employee-table') && (
-            <div id="employee-table" className="card-modern overflow-hidden transition-all duration-700 relative glossy-mesh border-accent/10">
-              <div className="p-8 border-b border-border-theme relative z-10">
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
-                  <div>
-                    <div className="flex items-center gap-4 mb-3">
-                       <div className="flex -space-x-2">
-                          {[1,2,3].map(i => (
-                             <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-accent/20 flex items-center justify-center">
-                                <ShieldCheck size={10} className="text-accent" />
-                             </div>
-                          ))}
-                       </div>
-                       <div className="h-px w-8 bg-accent/30" />
-                       <span className="text-[12px] font-black text-accent uppercase tracking-[0.4em] drop-shadow-sm">Operational Readiness Division</span>
-                    </div>
-                    <h2 className="text-4xl font-black text-primary tracking-tighter leading-none mb-2">إدارة القوة البشرية والبيانات البيومترية</h2>
-                    <div className="flex items-center gap-3 mt-3">
-                       <p className="text-text-muted text-[13px] font-bold opacity-60">قاعدة بيانات الكادر الوظيفي المتكاملة والمحدثة لحظياً عبر الحوسبة السحابية</p>
-                       {departmentFilter !== 'all' && (
-                         <span className="flex items-center gap-2 px-4 py-1.5 bg-accent text-primary rounded-2xl text-[11px] font-black shadow-lg shadow-accent/20">
-                           <Filter size={14} /> {departmentFilter}
-                           <button onClick={() => setDepartmentFilter('all')} className="hover:scale-125 transition-transform"><X size={14} /></button>
-                         </span>
-                       )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-3 w-full lg:w-auto items-center">
-                    {selectedEmployees.length > 0 && (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.9, x: 20 }}
-                        animate={{ opacity: 1, scale: 1, x: 0 }}
-                        className="flex items-center gap-4 bg-red-500 text-white px-5 py-2.5 rounded-2xl shadow-xl shadow-red-500/20 border border-red-400 group"
+                return (
+                  <Draggable key={widgetId} draggableId={widgetId} index={index}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        className={`${widgetId === 'perf-summary' || widgetId === 'main-chart' || widgetId === 'employee-table' ? 'lg:col-span-3' : 'lg:col-span-1'} ${snapshot.isDragging ? 'z-50 opacity-80' : ''}`}
                       >
-                        <span className="text-[11px] font-black uppercase tracking-tight">Selected: {selectedEmployees.length} Units</span>
-                        <button 
-                          onClick={handleBulkDelete}
-                          className="p-1.5 bg-white/20 hover:bg-white/40 rounded-lg transition-all"
-                          title="حذف المحدد"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </motion.div>
+                        <div className="relative group/widget">
+                          {widgetId === 'employee-table' ? widget : (
+                            <>
+                              <div {...provided.dragHandleProps} className="absolute top-4 left-4 z-20 p-2 opacity-0 group-hover/widget:opacity-100 transition-opacity cursor-grab active:cursor-grabbing bg-white/20 backdrop-blur rounded-lg border border-white/20 text-white">
+                                <GripVertical size={14} />
+                              </div>
+                              {widget}
+                            </>
+                          )}
+                        </div>
+                      </div>
                     )}
-                    
-                    <button 
-                      onClick={() => {
-                        setIsSyncing(true);
-                        setTimeout(() => {
-                          HRIntegrationService.syncNow().then(async () => {
-                            await loadData();
-                            setIsSyncing(false);
-                          });
-                        }, 1000);
-                      }}
-                      disabled={isSyncing}
-                      className="btn-modern btn-primary flex items-center gap-3 h-14 px-8"
-                    >
-                      <RefreshCw className={`w-5 h-5 ${isSyncing ? 'animate-spin' : ''}`} /> 
-                      <div className="flex flex-col items-start leading-none gap-1">
-                        <span className="text-[12px]">مزامنة HR</span>
-                        <span className="text-[9px] opacity-40 font-bold uppercase tracking-widest">Full DB Sync</span>
-                      </div>
-                    </button>
-
-                    <button 
-                      onClick={onAddEmployee}
-                      className="btn-modern btn-accent flex items-center gap-3 h-14 px-8"
-                    >
-                      <Plus className="w-5 h-5" />
-                      <div className="flex flex-col items-start leading-none gap-1">
-                        <span className="text-[12px]">إضافة كادر</span>
-                        <span className="text-[9px] opacity-60 font-bold uppercase tracking-widest">New Entry</span>
-                      </div>
-                    </button>
-
-                    <button 
-                      onClick={handleExportEmployeesCSV}
-                      className="h-14 w-14 glass text-primary rounded-2xl flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-600 transition-all shadow-modern border border-border-theme group"
-                      title="Cloud Export (CSV)"
-                    >
-                      <FileUp className="w-6 h-6 group-hover:-translate-y-1 transition-transform" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Advanced Search & Filter Bar */}
-                <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-6 items-end bg-white/40 backdrop-blur-3xl p-8 rounded-[2.5rem] border border-white/60 shadow-inner group transition-all">
-                  <div className="space-y-3 lg:col-span-1">
-                     <label className="text-label flex items-center gap-2">
-                        <Search size={14} className="text-accent" /> البحث الذكي
-                     </label>
-                     <div className="relative group">
-                       <input 
-                         type="text" 
-                         placeholder="الاسم، الرقم الوظيفي..." 
-                         value={searchTerm}
-                         onChange={e => {
-                           setSearchTerm(e.target.value);
-                           setCurrentPage(1);
-                         }}
-                         className="w-full px-5 py-4 bg-white/80 border border-border-theme rounded-2xl text-[13px] font-bold focus:ring-4 focus:ring-accent/10 focus:border-accent outline-none shadow-sm transition-all placeholder:opacity-30"
-                       />
-                       <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-50 flex items-center justify-center rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity">
-                         <ChevronLeft size={14} className="text-accent" />
-                       </div>
-                     </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                     <label className="text-label flex items-center gap-2">
-                        <Filter size={14} className="text-accent" /> تصنيف الاختصاص
-                     </label>
-                     <select
-                       value={selectedType}
-                       onChange={e => setSelectedType(e.target.value as any)}
-                       className="w-full px-5 py-4 bg-white/80 border border-border-theme rounded-2xl text-[13px] font-bold outline-none shadow-sm focus:ring-4 focus:ring-accent/10 focus:border-accent appearance-none cursor-pointer hover:bg-white transition-colors"
-                     >
-                        <option value="all">كافة التخصصات (All)</option>
-                        <option value="technical">كادر فني (Technical)</option>
-                        <option value="non-technical">كادر إداري (General)</option>
-                     </select>
-                  </div>
-
-                  <div className="space-y-3">
-                     <label className="text-label flex items-center gap-2">
-                        <Users size={14} className="text-accent" /> الفئة التعاقدية
-                     </label>
-                     <select
-                       value={selectedCategory}
-                       onChange={e => setSelectedCategory(e.target.value as any)}
-                       className="w-full px-5 py-4 bg-white/80 border border-border-theme rounded-2xl text-[13px] font-bold outline-none shadow-sm focus:ring-4 focus:ring-accent/10 focus:border-accent appearance-none cursor-pointer hover:bg-white transition-colors"
-                     >
-                        <option value="all">كافة الفئات (Global)</option>
-                        <option value="internal">موظف رسمي (Permanent)</option>
-                        <option value="contractor">نظام التعاقد (Contract)</option>
-                        <option value="consultant">مستشار (Consultant)</option>
-                     </select>
-                  </div>
-
-                  <div className="space-y-3">
-                     <label className="text-label flex items-center gap-2">
-                        <Calendar size={14} className="text-accent" /> نافذة التاريخ
-                     </label>
-                     <input 
-                      type="date"
-                      value={joinDateFilter}
-                      onChange={e => setJoinDateFilter(e.target.value)}
-                      className="w-full px-5 py-4 bg-white/80 border border-border-theme rounded-2xl text-[13px] font-bold outline-none shadow-sm focus:ring-4 focus:ring-accent/10 focus:border-accent transition-all"
-                    />
-                  </div>
-
-                  <div>
-                     <button 
-                      onClick={() => {
-                          setSearchTerm('');
-                          setSelectedType('all');
-                          setSelectedCategory('all');
-                          setJoinDateFilter('');
-                      }}
-                      className="w-full py-4 bg-red-500/5 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-2xl text-[11px] font-black text-red-600 transition-all uppercase tracking-[0.14em] shadow-sm active:scale-95 flex items-center justify-center gap-2"
-                     >
-                        <RefreshCw size={14} /> تصفير المعايير
-                     </button>
-                  </div>
-                </div>
-
-                {isSyncing && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-4 text-[11px] font-black text-primary p-4 bg-primary/5 rounded-2xl border border-primary/10 mt-6"
-                  >
-                     <div className="flex gap-1.5">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-                     </div>
-                     جاري مزامنة قاعدة البيانات المركزية مع الأنظمة الوزارية...
-                  </motion.div>
-                )}
-              </div>
-
-              <div className="luxury-card overflow-hidden">
-                <div className="overflow-x-auto p-4 custom-scrollbar">
-                  <table className="w-full text-right border-collapse min-w-[1000px]">
-                    <thead>
-                      <tr className="border-b border-border-theme bg-slate-50/50">
-                        <th className="px-8 py-8 w-20">
-                          <div className="flex items-center justify-center">
-                            <input 
-                              type="checkbox" 
-                              onChange={handleSelectAll}
-                              checked={selectedEmployees.length === paginatedEmployees.length && paginatedEmployees.length > 0}
-                              className="w-5 h-5 accent-accent rounded-lg cursor-pointer"
-                            />
-                          </div>
-                        </th>
-                        <th className="px-8 py-8">
-                          <button 
-                            onClick={() => handleSort('name')}
-                            className="flex items-center gap-3 hover:text-accent transition-all group"
-                          >
-                            <span className="technical-label">الكادر والمنصب</span>
-                            <ArrowUpDown size={14} className="opacity-40 group-hover:opacity-100 transition-opacity" />
-                          </button>
-                        </th>
-                        <th className="px-8 py-8 whitespace-nowrap"><span className="technical-label">الإدارة / المسمى</span></th>
-                        <th className="px-8 py-8"><span className="technical-label">الرقم الوظيفي</span></th>
-                        <th className="px-8 py-8"><span className="technical-label">مؤشر البصمة</span></th>
-                        <th className="px-8 py-8 text-left whitespace-nowrap"><span className="technical-label">Performance Metric</span></th>
-                        <th className="px-8 py-8 text-left whitespace-nowrap"><span className="technical-label">Actions</span></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-theme/50">
-                      {paginatedEmployees.map(emp => {
-                        const score = getLatestScore(emp.id!);
-                        return (
-                          <motion.tr 
-                            layout
-                            key={emp.id} 
-                            onClick={() => navigate(`/details/${emp.id}`)}
-                            className={`group hover:bg-slate-50 transition-all cursor-pointer ${selectedEmployees.includes(emp.id!) ? 'bg-accent/5' : ''}`}
-                          >
-                            <td className="px-8 py-6" onClick={(e) => e.stopPropagation()}>
-                               <div className="flex items-center justify-center">
-                                <input 
-                                  type="checkbox" 
-                                  checked={selectedEmployees.includes(emp.id!)}
-                                  onChange={() => handleSelectOne(emp.id!)}
-                                  className="w-5 h-5 accent-accent rounded-lg cursor-pointer"
-                                />
-                               </div>
-                            </td>
-                            <td className="px-8 py-6">
-                              <div className="flex items-center gap-5">
-                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-lg shrink-0 border border-white shadow-lg relative transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 ${
-                                  score === null ? 'bg-slate-200 text-slate-500' :
-                                  score >= 90 ? 'bg-emerald-500 text-white' :
-                                  score >= 75 ? 'bg-blue-500 text-white' :
-                                  score >= 50 ? 'bg-amber-500 text-white' : 'bg-red-500 text-white'
-                                }`}>
-                                  {emp.name[0]}
-                                </div>
-                                <div>
-                                  <p className="font-black text-primary text-base leading-tight mb-1 group-hover:text-accent transition-colors">{emp.name}</p>
-                                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] opacity-60">
-                                    Strategic Asset • {emp.category === 'internal' ? 'رسمي' : 'متعاقد'}
-                                  </p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-8 py-6">
-                              <div className="text-[13px] font-bold text-primary">{emp.department}</div>
-                              <div className="text-[11px] text-text-muted font-bold mt-1 opacity-60 tracking-tight italic uppercase">{emp.position}</div>
-                            </td>
-                            <td className="px-8 py-6">
-                              <span className="font-mono text-[11px] font-black text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 group-hover:border-accent/40 group-hover:text-primary transition-all">
-                                {emp.employeeId}
-                              </span>
-                            </td>
-                            <td className="px-8 py-6">
-                              <div className="flex items-center gap-3">
-                                 <div className="w-9 h-9 rounded-full bg-slate-200/50 flex items-center justify-center text-text-muted shrink-0 shadow-inner">
-                                    <Fingerprint size={16} />
-                                 </div>
-                                 <span className="text-[12px] font-bold text-primary">{emp.biometricId || '---'}</span>
-                              </div>
-                            </td>
-                            <td className="px-8 py-6 text-left">
-                              {score !== null ? (
-                                <div className="inline-flex items-center gap-4 bg-white px-4 py-2 rounded-2xl border border-border-theme shadow-sm group-hover:shadow-md transition-shadow">
-                                   <div className="flex flex-col items-end">
-                                     <span className="text-[9px] font-black text-text-muted opacity-40 uppercase tracking-[0.2em]">Rating Index</span>
-                                     <span className={`text-sm font-black ${
-                                       score >= 90 ? 'text-emerald-600' :
-                                       score >= 75 ? 'text-blue-600' : 'text-amber-600'
-                                     }`}>%{score.toFixed(1)}</span>
-                                   </div>
-                                   <div className={`w-3 h-3 rounded-full ${
-                                      score >= 90 ? 'bg-emerald-500 animate-pulse' :
-                                      score >= 75 ? 'bg-blue-500' : 'bg-amber-500'
-                                   }`} />
-                                </div>
-                              ) : (
-                                <span className="px-4 py-1.5 bg-slate-50 text-slate-300 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-100 italic shadow-inner">Pending Session</span>
-                              )}
-                            </td>
-                            <td className="px-8 py-6 text-left" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
-                                <button
-                                  onClick={() => navigate(`/details/${emp.id}`)}
-                                  className="p-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all shadow-xl shadow-primary/10 hover:scale-110 active:scale-95"
-                                  title="التحليل الكامل"
-                                >
-                                  <BrainCircuit size={16} />
-                                </button>
-                                <button
-                                  onClick={() => onEditEmployee(emp)}
-                                  className="p-3 bg-white text-text-muted border border-border-theme rounded-xl hover:text-accent hover:border-accent transition-all shadow-sm hover:scale-110 active:scale-95"
-                                  title="تعديل سريع"
-                                >
-                                  <Settings size={16} />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteEmployee(emp)}
-                                  className="p-3 bg-red-50 text-red-400 border border-red-100 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm hover:scale-110 active:scale-95"
-                                  title="حذف السجل"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              </div>
-                            </td>
-                          </motion.tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              
-              {/* Enhanced Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="p-8 border-t border-border-theme bg-white/60 flex items-center justify-between z-10 relative px-12">
-                  <div className="text-[11px] font-black text-text-muted uppercase tracking-[0.2em] flex items-center gap-4">
-                    <span className="opacity-40">System Entries:</span>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-2xl border border-border-theme shadow-modern">
-                      <span className="text-primary">{(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredEmployees.length)}</span>
-                      <span className="opacity-30">/</span>
-                      <span className="text-accent">{filteredEmployees.length}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <button 
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(prev => prev - 1)}
-                      className="p-3 bg-white border border-border-theme rounded-2xl hover:shadow-md disabled:opacity-30 transition-all active:scale-90"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                    
-                    <div className="flex items-center gap-1.5 bg-white/50 backdrop-blur-md p-2 rounded-3xl border border-white/60 shadow-inner">
-                      {[...Array(totalPages)].map((_, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setCurrentPage(i + 1)}
-                          className={`w-10 h-10 flex items-center justify-center rounded-2xl text-[11px] font-black transition-all ${
-                            currentPage === i + 1 
-                            ? 'bg-primary text-white shadow-xl shadow-primary/30 scale-110' 
-                            : 'hover:bg-white text-text-muted hover:text-primary'
-                          }`}
-                        >
-                          {i + 1}
-                        </button>
-                      ))}
-                    </div>
-
-                    <button 
-                      disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage(prev => prev + 1)}
-                      className="p-3 bg-white border border-border-theme rounded-2xl hover:shadow-md disabled:opacity-30 transition-all active:scale-90"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {filteredEmployees.length === 0 && (
-                <div className="p-24 text-center z-10 relative">
-                  <div className="w-24 h-24 bg-slate-50/50 backdrop-blur-sm rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 border border-white/60 shadow-inner animate-pulse">
-                    <Users className="w-10 h-10 text-slate-300" />
-                  </div>
-                  <h3 className="text-xl font-black text-primary mb-2 tracking-tighter">قاعدة البيانات خالية حالياً</h3>
-                  <p className="text-text-muted font-bold text-sm">ابحث بمعايير أخرى أو قم بتصفير الفلاتر للنتائج المرجوة</p>
-                </div>
-              )}
-              </div>
+                  </Draggable>
+                );
+              })}
+              {provided.placeholder}
             </div>
           )}
-        </div>
-      </div>
+        </Droppable>
+      </DragDropContext>
 
-        {/* Sidebar: Analytics & Charts */}
-        <div className="space-y-6">
-          {settings.widgetOrder
-            .filter(id => id === 'ai-advisor' || id === 'performance-alerts')
-            .map(id => renderWidget(id))}
-
-          <AnimatePresence>
-            {globalAnalysis && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-primary/40 backdrop-blur-md flex items-center justify-center p-4 md:p-8 z-[200]"
-              >
-                <motion.div 
-                  initial={{ scale: 0.9, y: 20 }}
-                  animate={{ scale: 1, y: 0 }}
-                  exit={{ scale: 0.9, y: 20 }}
-                  className="card-modern w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-premium border-white/40"
+      <AnimatePresence>
+        {globalAnalysis && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-primary/40 backdrop-blur-md flex items-center justify-center p-4 md:p-8 z-[200]"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="card-modern w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-premium border-white/40"
+            >
+              <div className="bg-primary p-10 text-white relative flex justify-between items-center overflow-hidden">
+                <div className="absolute inset-0 bg-accent/5 skew-x-[-20deg] origin-top translate-x-24 opacity-50" />
+                <div className="relative z-10">
+                   <div className="flex items-center gap-3 mb-2">
+                      <Sparkles className="text-accent animate-pulse" size={18} />
+                      <span className="text-[10px] font-black text-accent uppercase tracking-[0.3em]">AI Strategic Intelligence</span>
+                   </div>
+                   <h3 className="text-3xl font-black tracking-tighter">
+                      التحليل المعمق للموارد البشرية
+                   </h3>
+                </div>
+                <button 
+                  onClick={() => setGlobalAnalysis(null)} 
+                  className="relative z-10 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center transition-all border border-white/20 group"
                 >
-                  <div className="bg-primary p-10 text-white relative flex justify-between items-center overflow-hidden">
-                    <div className="absolute inset-0 bg-accent/5 skew-x-[-20deg] origin-top translate-x-24 opacity-50" />
-                    <div className="relative z-10">
-                       <div className="flex items-center gap-3 mb-2">
-                          <Sparkles className="text-accent animate-pulse" size={18} />
-                          <span className="text-[10px] font-black text-accent uppercase tracking-[0.3em]">AI Strategic Intelligence</span>
-                       </div>
-                       <h3 className="text-3xl font-black tracking-tighter">
-                          التحليل المعمق للموارد البشرية
-                       </h3>
-                    </div>
-                    <button 
-                      onClick={() => setGlobalAnalysis(null)} 
-                      className="relative z-10 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center transition-all border border-white/20 group"
-                    >
-                      <X className="w-6 h-6 group-hover:rotate-90 transition-transform" />
-                    </button>
-                  </div>
-
-                  <div className="p-12 overflow-y-auto custom-scrollbar flex-1 bg-white/50 backdrop-blur-sm">
-                    <div className="ai-markdown-container text-right leading-loose" dir="rtl">
-                      <div className="p-8 bg-white/80 rounded-[2.5rem] border border-border-theme shadow-inner shadow-primary/5">
-                        <div dangerouslySetInnerHTML={{ __html: globalAnalysis.replace(/\n/g, '<br/>') }} />
-                      </div>
-                    </div>
-                    
-                    <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-                       <div className="p-6 bg-emerald-500/5 rounded-3xl border border-emerald-500/10 flex items-center gap-4">
-                          <div className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                             <Trophy size={20} />
-                          </div>
-                          <div>
-                             <div className="text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-none mb-1">Key Strength</div>
-                             <div className="text-[13px] font-black text-primary">تميز الأداء الفني</div>
-                          </div>
-                       </div>
-                       <div className="p-6 bg-blue-500/5 rounded-3xl border border-blue-500/10 flex items-center gap-4">
-                          <div className="w-12 h-12 bg-blue-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                             <Target size={20} />
-                          </div>
-                          <div>
-                             <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Strategic Goal</div>
-                             <div className="text-[13px] font-black text-primary">رفع جودة التقارير</div>
-                          </div>
-                       </div>
-                       <div className="p-6 bg-amber-500/5 rounded-3xl border border-amber-500/10 flex items-center gap-4">
-                          <div className="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/20">
-                             <Zap size={20} />
-                          </div>
-                          <div>
-                             <div className="text-[10px] font-black text-amber-600 uppercase tracking-widest leading-none mb-1">AI Suggestion</div>
-                             <div className="text-[13px] font-black text-primary">تكثيف دورات SAP</div>
-                          </div>
-                       </div>
-                    </div>
-                  </div>
-
-                  <div className="p-8 bg-slate-50 border-t border-border-theme flex justify-end">
-                     <button 
-                       onClick={() => setGlobalAnalysis(null)}
-                       className="btn-modern btn-primary h-12 px-10 flex items-center justify-center"
-                     >
-                       فهمت، شكراً
-                     </button>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {showExport && (
-              <ExportEvaluations onClose={() => setShowExport(false)} />
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {showHistoryEmployee && (
-              <EvaluationHistory 
-                employee={showHistoryEmployee} 
-                onClose={() => setShowHistoryEmployee(null)} 
-              />
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {employeeToDelete && (
-              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  onClick={() => setEmployeeToDelete(null)}
-                  className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                />
-                <motion.div 
-                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                  animate={{ scale: 1, opacity: 1, y: 0 }}
-                  exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                  className="bg-white rounded-3xl shadow-2xl border border-border-theme w-full max-w-md overflow-hidden relative z-10"
-                >
-                  <div className="p-8 text-center text-right" dir="rtl">
-                    <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
-                      <Trash2 size={40} />
-                    </div>
-                    <h3 className="text-xl font-black text-text-dark mb-4">تأكيد حذف الموظف</h3>
-                    <p className="text-text-muted text-sm font-bold leading-relaxed mb-8">
-                      هل أنت متأكد من رغبتك في حذف الموظف <span className="text-red-600">"{employeeToDelete.name}"</span>؟ 
-                      <br /> <span className="text-[11px] opacity-70 mt-2 block italic">"This action cannot be undone. All associated evaluations will be permanently removed."</span>
-                    </p>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <button 
-                        onClick={() => setEmployeeToDelete(null)}
-                        className="py-3 px-6 bg-slate-100 hover:bg-slate-200 text-text-muted font-black text-xs uppercase tracking-widest rounded-xl transition-all"
-                      >
-                        إلغاء (Cancel)
-                      </button>
-                      <button 
-                        onClick={confirmDelete}
-                        className="py-3 px-6 bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-red-200"
-                      >
-                        تأكيد الحذف (Confirm)
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
+                  <X className="w-6 h-6 group-hover:rotate-90 transition-transform" />
+                </button>
               </div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-    );
+
+              <div className="p-12 overflow-y-auto custom-scrollbar flex-1 bg-white/50 backdrop-blur-sm">
+                <div className="ai-markdown-container text-right leading-loose" dir="rtl">
+                  <div className="p-8 bg-white/80 rounded-[2.5rem] border border-border-theme shadow-inner shadow-primary/5">
+                    <div dangerouslySetInnerHTML={{ __html: globalAnalysis.replace(/\n/g, '<br/>') }} />
+                  </div>
+                </div>
+                
+                <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+                   <div className="p-6 bg-emerald-500/5 rounded-3xl border border-emerald-500/10 flex items-center gap-4">
+                      <div className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                         <Trophy size={20} />
+                      </div>
+                      <div>
+                         <div className="text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-none mb-1">Key Strength</div>
+                         <div className="text-[13px] font-black text-primary">تميز الأداء الفني</div>
+                      </div>
+                   </div>
+                   <div className="p-6 bg-blue-500/5 rounded-3xl border border-blue-500/10 flex items-center gap-4">
+                      <div className="w-12 h-12 bg-blue-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                         <Target size={20} />
+                      </div>
+                      <div>
+                         <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Strategic Goal</div>
+                         <div className="text-[13px] font-black text-primary">رفع جودة التقارير</div>
+                      </div>
+                   </div>
+                   <div className="p-6 bg-amber-500/5 rounded-3xl border border-amber-500/10 flex items-center gap-4">
+                      <div className="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+                         <Zap size={20} />
+                      </div>
+                      <div>
+                         <div className="text-[10px] font-black text-amber-600 uppercase tracking-widest leading-none mb-1">AI Suggestion</div>
+                         <div className="text-[13px] font-black text-primary">تكثيف دورات SAP</div>
+                      </div>
+                   </div>
+                </div>
+              </div>
+
+              <div className="p-8 bg-slate-50 border-t border-border-theme flex justify-end">
+                 <button 
+                   onClick={() => setGlobalAnalysis(null)}
+                   className="btn-modern btn-primary h-12 px-10 flex items-center justify-center"
+                 >
+                   فهمت، شكراً
+                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showExport && (
+          <ExportEvaluations onClose={() => setShowExport(false)} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showHistoryEmployee && (
+          <EvaluationHistory 
+            employee={showHistoryEmployee} 
+            onClose={() => setShowHistoryEmployee(null)} 
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {employeeToDelete && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setEmployeeToDelete(null)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl border border-border-theme w-full max-w-md overflow-hidden relative z-10"
+            >
+              <div className="p-8 text-center text-right" dir="rtl">
+                <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
+                  <Trash2 size={40} />
+                </div>
+                <h3 className="text-xl font-black text-text-dark mb-4">تأكيد حذف الموظف</h3>
+                <p className="text-text-muted text-sm font-bold leading-relaxed mb-8">
+                  هل أنت متأكد من رغبتك في حذف الموظف <span className="text-red-600">"{employeeToDelete.name}"</span>؟ 
+                  <br /> <span className="text-[11px] opacity-70 mt-2 block italic">"This action cannot be undone. All associated evaluations will be permanently removed."</span>
+                </p>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <button 
+                    onClick={() => setEmployeeToDelete(null)}
+                    className="py-3 px-6 bg-slate-100 hover:bg-slate-200 text-text-muted font-black text-xs uppercase tracking-widest rounded-xl transition-all"
+                  >
+                    إلغاء (Cancel)
+                  </button>
+                  <button 
+                    onClick={confirmDelete}
+                    className="py-3 px-6 bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-red-200"
+                  >
+                    تأكيد الحذف (Confirm)
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 function StatCard({ icon, label, value, trend, color }: { icon: any, label: string, value: string, trend: string, color: string }) {
