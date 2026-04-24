@@ -48,7 +48,9 @@ import {
   Target,
   Zap,
   ShieldCheck,
-  BrainCircuit
+  Building2,
+  BrainCircuit,
+  ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
@@ -84,21 +86,17 @@ interface DashboardProps {
 
 const WIDGETS_INFO = {
   'perf-summary': { label: 'ملخص التنبيهات', icon: <AlertTriangle size={16} /> },
-  'stat-staff': { label: 'إجمالي الكادر', icon: <Users size={16} /> },
-  'stat-evals': { label: 'تقييمات الشهر', icon: <BarChart3 size={16} /> },
-  'stat-avg': { label: 'متوسط الأداء', icon: <Award size={16} /> },
-  'stat-top': { label: 'المتميزين', icon: <TrendingUp size={16} /> },
-  'stat-alerts': { label: 'تنبيهات الأداء', icon: <AlertTriangle size={16} /> },
-  'performance-alerts': { label: 'تنبيهات الأداء الحارجة', icon: <AlertTriangle size={16} /> },
-  'main-chart': { label: 'مخطط الأداء', icon: <BarChart3 size={16} /> },
-  'employee-table': { label: 'جدول الموظفين', icon: <ListChecks size={16} /> },
-  'ai-advisor': { label: 'المحلل الذكي', icon: <Award size={16} /> },
-  'fingerprint-sync': { label: 'ربط أجهزة البصمة', icon: <Fingerprint size={16} /> }
+  'stat-low-alert': { label: 'تنبيهات الأداء المنخفض', icon: <AlertTriangle size={16} /> },
+  'performance-alerts': { label: 'تنبيهات الأداء الحرجة', icon: <AlertTriangle size={16} /> },
+  'main-chart': { label: 'مخطط الأداء الوزاري', icon: <BarChart3 size={16} /> },
+  'employee-table': { label: 'سجل القوة البشرية', icon: <ListChecks size={16} /> },
+  'ai-advisor': { label: 'المحلل الاستراتيجي الذكي', icon: <Award size={16} /> },
+  'fingerprint-sync': { label: 'مزامنة الأنظمة البيومترية', icon: <Fingerprint size={16} /> }
 };
 
 const DEFAULT_SETTINGS: DashboardSettings = {
-  visibleWidgets: ['perf-summary', 'stat-staff', 'stat-evals', 'stat-avg', 'stat-top', 'stat-alerts', 'performance-alerts', 'main-chart', 'employee-table', 'ai-advisor', 'fingerprint-sync'],
-  widgetOrder: ['perf-summary', 'stat-staff', 'stat-evals', 'stat-avg', 'stat-top', 'stat-alerts', 'performance-alerts', 'main-chart', 'employee-table', 'ai-advisor', 'fingerprint-sync']
+  visibleWidgets: ['perf-summary', 'stat-staff', 'stat-tech', 'stat-non-tech', 'stat-eval-done', 'stat-eval-pending', 'stat-low-alert', 'performance-alerts', 'main-chart', 'employee-table', 'ai-advisor', 'fingerprint-sync'],
+  widgetOrder: ['perf-summary', 'stat-staff', 'stat-tech', 'stat-non-tech', 'stat-eval-done', 'stat-eval-pending', 'stat-low-alert', 'performance-alerts', 'main-chart', 'employee-table', 'ai-advisor', 'fingerprint-sync']
 };
 
 export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmployee, onEvaluateUser, refreshTrigger }: DashboardProps) {
@@ -121,6 +119,32 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   
   const settings = user?.dashboardSettings || DEFAULT_SETTINGS;
+
+  // New KPI Calculations
+  const stats = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    const totalEmployees = employees.length;
+    const technicalStaff = employees.filter(e => e.type === 'technical').length;
+    const nonTechnicalStaff = employees.filter(e => e.type === 'non-technical').length;
+    
+    // For pending evaluations: check employees who don't have an eval for current month/year
+    const evalsThisMonth = evaluations.filter(e => e.month === currentMonth && e.year === currentYear);
+    const evaluatedIds = new Set(evalsThisMonth.map(e => e.employeeId));
+    
+    const completedEvaluations = evaluatedIds.size;
+    const pendingEvaluations = totalEmployees - completedEvaluations;
+
+    return {
+      totalEmployees,
+      technicalStaff,
+      nonTechnicalStaff,
+      completedEvaluations,
+      pendingEvaluations
+    };
+  }, [employees, evaluations]);
 
   const perfAlerts = useMemo(() => {
     const alerts: { employee: Employee; drop: number; latest: number; avg: number }[] = [];
@@ -439,143 +463,153 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
     switch (widgetId) {
       case 'perf-summary':
         return (
-          <div key={widgetId} className="bg-primary/95 backdrop-blur-3xl rounded-[3rem] p-10 flex flex-col md:flex-row items-center justify-between shadow-[0_30px_60px_-15px_rgba(5,10,20,0.4)] lg:col-span-2 relative overflow-hidden group border border-white/10 transition-all duration-700 hover:scale-[1.01]">
-            <div className="absolute top-0 left-0 w-full h-full bg-accent/10 -translate-y-1/2 translate-x-1/2 blur-[100px] pointer-events-none opacity-40 shrink-0" />
+          <div key={widgetId} className="ministry-banner lg:col-span-3 flex flex-col md:flex-row items-center justify-between shadow-premium transition-all duration-700 hover:scale-[1.005] group">
+            <div className="absolute top-0 left-0 w-full h-full bg-accent/5 -translate-y-1/2 translate-x-1/2 blur-[120px] pointer-events-none opacity-40 shrink-0" />
             <div className="flex items-center gap-10 relative z-10 shrink-0">
-              <div className="w-28 h-28 bg-white/5 rounded-[2rem] flex items-center justify-center text-accent border border-white/10 shadow-[inner_0_0_20px_rgba(255,255,255,0.05)] group-hover:rotate-12 transition-transform duration-700 relative">
-                <div className="absolute inset-0 bg-accent/20 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                <AlertTriangle size={56} className="relative z-10" />
+              <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center text-accent border border-white/20 shadow-inner group-hover:rotate-6 transition-transform duration-700">
+                <ShieldCheck size={48} />
               </div>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-                  <span className="text-[10px] font-black text-accent uppercase tracking-[0.3em]">System Intelligence</span>
+                  <span className="text-[10px] font-black text-accent uppercase tracking-[0.4em]">Integrated Ministerial Intelligence</span>
                 </div>
-                <h3 className="text-3xl font-black text-white tracking-tighter leading-none">مركز تنبيهات الأنظمة</h3>
-                <p className="text-white/50 text-[15px] font-medium leading-relaxed max-w-sm">
-                  تم رصد <span className="text-white font-bold underline decoration-accent/40 underline-offset-8">{perfAlerts.length}</span> انحرافات حادة في مستوى الأداء مقارنة بالسلاسل الزمنية المعتمدة للوزارة.
+                <h3 className="text-4xl font-black text-white tracking-tighter leading-none">نظام مراقبة كفاءة الأطقم التخصصية</h3>
+                <p className="text-white/60 text-[14px] font-medium leading-relaxed max-w-lg">
+                  يتم تحليل بيانات الأداء لعدد <span className="text-accent font-black">{employees.length}</span> من الكوادر الفنية والإدارية، مع مراقبة حية للامتثال للمعايير الحكومية.
                 </p>
               </div>
             </div>
-            <button 
-              onClick={() => {
-                const alertsWidget = document.getElementById('performance-alerts');
-                if (alertsWidget) alertsWidget.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="mt-8 md:mt-0 px-12 py-6 bg-accent text-primary rounded-2xl text-[13px] font-black shadow-[0_20px_40px_rgba(212,175,55,0.3)] hover:scale-105 transition-all uppercase tracking-[0.2em] active:scale-95 border border-white/20 hover:bg-white hover:text-primary"
-            >
-              مراجعة التنبيهات (Action Required)
-            </button>
+            <div className="flex gap-4 relative z-10 mt-8 md:mt-0">
+               <button 
+                onClick={() => navigate('/alerts')}
+                className="btn-modern btn-accent h-16 px-12 text-[14px] flex items-center gap-3"
+               >
+                 مركز التنبيهات <AlertTriangle size={18} />
+               </button>
+               <button 
+                onClick={onAddEmployee}
+                className="btn-modern bg-white/10 hover:bg-white/20 text-white border border-white/20 h-16 px-10 text-[13px] hidden lg:flex items-center gap-3"
+               >
+                 إضافة كادر جديد <Plus size={18} />
+               </button>
+            </div>
           </div>
         );
       case 'stat-staff':
         return (
           <StatCard 
             key={widgetId}
-            icon={<Users className="w-6 h-6" />}
-            label="إجمالي الكادر"
-            value={employees.length.toString()}
-            trend="+2 موظفين"
-            color="bg-blue-500"
+            icon={<Users size={20} />}
+            label="إجمالي القوة البشرية"
+            value={stats.totalEmployees.toString()}
+            trend="موثق بقاعدة البيانات"
+            color="bg-primary"
           />
         );
-      case 'stat-evals':
-        const now = new Date();
-        const currentMonth = now.getMonth() + 1;
-        const currentYear = now.getFullYear();
-        const thisMonthCount = evaluations.filter(e => e.month === currentMonth && e.year === currentYear).length;
-        
+      case 'stat-tech':
         return (
           <StatCard 
             key={widgetId}
-            icon={<BarChart3 className="w-6 h-6" />}
-            label="تقييمات الشهر الحالي"
-            value={thisMonthCount.toString()}
-            trend="تحديث تلقائي"
-            color="bg-emerald-500"
+            icon={<Cpu size={20} />}
+            label="الكوادر الفنية"
+            value={stats.technicalStaff.toString()}
+            trend={`${((stats.technicalStaff / (stats.totalEmployees || 1)) * 100).toFixed(0)}% من الإجمالي`}
+            color="bg-blue-900"
           />
         );
-      case 'stat-avg':
+      case 'stat-non-tech':
         return (
           <StatCard 
             key={widgetId}
-            icon={<Award className="w-6 h-6" />}
-            label="متوسط الأداء الوزاري"
-            value={`${(evaluations.reduce((acc, c) => acc + c.totalScore, 0) / (evaluations.length || 1)).toFixed(1)}%`}
-            trend="مستقر"
-            color="bg-amber-500"
+            icon={<Building2 size={20} />}
+            label="الكوادر الإدارية"
+            value={stats.nonTechnicalStaff.toString()}
+            trend={`${((stats.nonTechnicalStaff / (stats.totalEmployees || 1)) * 100).toFixed(0)}% من الإجمالي`}
+            color="bg-slate-800"
           />
         );
-      case 'stat-top':
+      case 'stat-eval-done':
         return (
           <StatCard 
             key={widgetId}
-            icon={<TrendingUp className="w-6 h-6" />}
-            label="المتميزين"
-            value={evaluations.filter(e => e.totalScore >= 90).length.toString()}
-            trend="نخبة الكادر"
-            color="bg-violet-500"
+            icon={<CheckCircle2 size={20} />}
+            label="تقييمات مكتملة"
+            value={stats.completedEvaluations.toString()}
+            trend="للدورة الحالية"
+            color="bg-emerald-600"
           />
         );
-      case 'stat-alerts':
+      case 'stat-eval-pending':
         return (
           <StatCard 
             key={widgetId}
-            icon={<AlertTriangle className="w-6 h-6" />}
-            label="تنبيهات هبوط الأداء"
+            icon={<Calendar size={20} />}
+            label="تقييمات قيد الانتظار"
+            value={stats.pendingEvaluations.toString()}
+            trend="تستحق المراجعة"
+            color="bg-amber-600"
+          />
+        );
+      case 'stat-low-alert':
+        return (
+          <StatCard 
+            key={widgetId}
+            icon={<AlertTriangle size={20} />}
+            label="تنبيهات الأداء المنخفض"
             value={perfAlerts.length.toString()}
-            trend="تتطلب متابعة"
-            color="bg-red-500"
+            trend="إجراء إداري مطلوب"
+            color="bg-red-600"
           />
         );
       case 'performance-alerts':
         return (
-          <div key={widgetId} className="card-modern overflow-hidden flex flex-col h-full group relative glossy-mesh">
-             <div className="absolute inset-0 bg-red-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+          <div key={widgetId} id={widgetId} className="ministry-card overflow-hidden flex flex-col h-full group relative">
+             <div className="absolute inset-0 bg-red-500/[0.01] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
             <div className="p-8 border-b border-border-theme flex justify-between items-center relative z-10">
                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-600 shadow-inner">
+                  <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-600 shadow-inner border border-red-100">
                     <AlertTriangle size={20} />
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-primary tracking-tight">تنبيهات حرجة</h3>
-                    <p className="text-[10px] font-black text-red-400 uppercase tracking-[0.2em] mt-0.5">Urgent Performance Risks</p>
+                    <h3 className="text-base font-black text-primary tracking-tight">رصد المخاطر المهنية</h3>
+                    <p className="text-[10px] font-black text-red-400 uppercase tracking-[0.2em] mt-0.5">Critical Performance Risks</p>
                   </div>
                </div>
                <div className="relative">
-                 <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full scale-150 animate-pulse" />
-                 <span className="relative bg-red-600 text-white text-[11px] font-black px-4 py-1.5 rounded-full shadow-2xl shadow-red-200">{perfAlerts.length}</span>
+                 <div className="absolute inset-0 bg-red-500/10 blur-xl rounded-full scale-150 animate-pulse" />
+                 <span className="relative bg-red-600 text-white text-[11px] font-black px-4 py-1.5 rounded-full shadow-lg">{perfAlerts.length}</span>
                </div>
             </div>
-            <div className="p-8 flex-1 overflow-y-auto custom-scrollbar space-y-5 max-h-[400px] relative z-10">
+            <div className="p-8 flex-1 overflow-y-auto custom-scrollbar space-y-5 max-h-[400px] relative z-10 bg-slate-50/20">
                {perfAlerts.length === 0 ? (
                  <div className="py-20 text-center">
-                    <div className="w-20 h-20 bg-slate-50/50 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-slate-100 shadow-inner">
-                      <CheckCircle2 size={40} className="text-emerald-300" />
+                    <div className="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-emerald-100 shadow-inner">
+                      <CheckCircle2 size={40} className="text-emerald-500" />
                     </div>
-                    <p className="text-[12px] font-black text-text-muted uppercase tracking-[0.3em]">وضع النظام: آمن</p>
+                    <p className="text-[12px] font-black text-text-muted uppercase tracking-[0.3em]">لا توجد مخاطر مرصودة حالياً</p>
                  </div>
                ) : (
                  perfAlerts.map((alert, idx) => (
                    <div 
                     key={idx} 
                     onClick={() => navigate(`/details/${alert.employee.id}`)}
-                    className="flex items-center gap-5 p-5 bg-white/60 backdrop-blur-md hover:bg-red-50/[0.4] rounded-[2rem] border border-border-theme cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg group/item"
+                    className="flex items-center gap-5 p-5 bg-white hover:bg-red-50 transition-all rounded-3xl border border-border-theme cursor-pointer group/item shadow-sm hover:shadow-md"
                    >
-                      <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-base font-black text-primary border border-border-theme shadow-sm group-hover/item:bg-red-600 group-hover/item:text-white transition-colors">
+                      <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-base font-black text-primary border border-border-theme group-hover/item:bg-red-600 group-hover/item:text-white transition-all">
                          {alert.employee.name[0]}
                       </div>
                       <div className="flex-1 min-w-0">
-                         <div className="text-[13px] font-black text-primary truncate group-hover/item:text-red-700 transition-colors">{alert.employee.name}</div>
-                         <div className="flex items-center justify-between mt-1.5">
-                            <span className="text-[10px] font-black text-red-600 bg-red-50 px-2 py-0.5 rounded-lg border border-red-100 uppercase">هبوط: {alert.drop.toFixed(0)}%</span>
-                            <span className="text-[10px] font-bold text-text-muted">{alert.avg.toFixed(0)}% → <span className="text-red-500 font-black">{alert.latest.toFixed(0)}%</span></span>
+                         <div className="text-[14px] font-black text-primary truncate group-hover/item:text-red-700 transition-colors">{alert.employee.name}</div>
+                         <div className="flex items-center justify-between mt-2">
+                            <span className="text-[10px] font-black text-red-600 bg-red-50 px-2.5 py-1 rounded-lg border border-red-100 uppercase">انحراف حاد</span>
+                            <span className="text-[11px] font-bold text-text-muted">{alert.avg.toFixed(0)}% → <span className="text-red-500 font-black">{alert.latest.toFixed(0)}%</span></span>
                          </div>
-                         <div className="mt-3 h-2 w-full bg-slate-100/50 rounded-full overflow-hidden border border-slate-100 shadow-inner">
+                         <div className="mt-3 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                             <motion.div 
                               initial={{ width: 0 }}
                               animate={{ width: `${alert.latest}%` }}
-                              className="h-full bg-gradient-to-r from-red-400 to-red-600 shadow-[0_0_12px_rgba(239,68,68,0.4)]" 
+                              className="h-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]" 
                             />
                          </div>
                       </div>
@@ -583,46 +617,40 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
                  ))
                )}
             </div>
-            {perfAlerts.length > 0 && (
-              <div className="p-6 bg-red-500/[0.03] border-t border-red-500/10 mt-auto backdrop-blur-md">
-                <div className="flex items-center gap-3 justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-                  <p className="text-[10px] font-black text-red-700/80 uppercase tracking-widest leading-none">يُنصح بإصدار إشعار إداري عاجل</p>
-                </div>
-              </div>
-            )}
           </div>
         );
       case 'main-chart':
         return (
-          <div key={widgetId} className="space-y-6 lg:col-span-2">
-            <div className="bg-card-bg rounded-lg shadow-sm border border-border-theme p-5 flex flex-col">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-sm font-bold flex items-center gap-2 text-text-dark">
-                  مؤشر أداء الكادر (الربع السنوي)
-                </h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black text-text-muted uppercase">تصفية حسب القسم:</span>
+          <div key={widgetId} className="space-y-8 lg:col-span-2">
+            <div className="ministry-card p-10 flex flex-col h-full bg-white relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/[0.02] rounded-full blur-3xl -mr-32 -mt-32" />
+              <div className="flex justify-between items-center mb-10 relative z-10">
+                <div>
+                   <h3 className="text-xl font-black text-primary tracking-tight">تحليل الاتجاه العام للأداء</h3>
+                   <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mt-1">Ministerial Performance Trend</p>
+                </div>
+                <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                  <span className="text-[11px] font-black text-text-muted uppercase pr-2">القطاع:</span>
                   <select 
                     value={chartDepartment}
                     onChange={(e) => setChartDepartment(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1 text-[10px] font-bold outline-none cursor-pointer focus:border-primary"
+                    className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-[11px] font-black outline-none cursor-pointer focus:border-primary shadow-sm"
                   >
-                    <option value="all">كافة الوزارة</option>
+                    <option value="all">كافة القطاعات</option>
                     {departments.map(d => (
                       <option key={d} value={d}>{d}</option>
                     ))}
                   </select>
                 </div>
               </div>
-              <div className="flex-1 h-[250px] flex items-center justify-center relative overflow-hidden">
+              <div className="flex-1 h-[300px] relative z-10">
                 {chartData.length > 0 && chartData.some(d => d.score > 0 || d.ministryAvg > 0) ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
                       <defs>
                         <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#004a99" stopOpacity={0.2}/>
-                          <stop offset="95%" stopColor="#004a99" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#050a14" stopOpacity={0.1}/>
+                          <stop offset="95%" stopColor="#050a14" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -630,83 +658,79 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
                         dataKey="name" 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fontSize: 9, fontWeight: 'black', fill: '#64748b' }} 
+                        tick={{ fontSize: 10, fontWeight: '700', fill: '#64748b' }} 
                         dy={10}
                       />
                       <YAxis domain={[0, 100]} hide />
                       <Tooltip 
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', fontSize: '11px', fontWeight: 'bold', direction: 'rtl' }}
+                        contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)', fontSize: '12px', fontWeight: 'bold', direction: 'rtl', padding: '16px' }}
                       />
-                      <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
+                      <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '24px', fontWeight: 'bold' }} />
                       <Area 
-                        name={chartDepartment === 'all' ? 'متوسط الوزارة' : `أداء ${chartDepartment}`}
+                        name={chartDepartment === 'all' ? 'المتوسط الوزاري' : `أداء قطاع ${chartDepartment}`}
                         type="monotone" 
                         dataKey="score" 
-                        stroke="#004a99" 
+                        stroke="#050a14" 
                         fillOpacity={1} 
                         fill="url(#colorScore)" 
                         strokeWidth={4} 
-                        animationDuration={1500}
                       />
                       <Line 
-                        name="المتوسط العام للوزارة"
+                        name="المعيار المرجعي العام"
                         type="monotone" 
                         dataKey="ministryAvg" 
                         stroke="#d4af37" 
-                        strokeWidth={2} 
-                        strokeDasharray="5 5" 
-                        dot={{ r: 3, fill: '#d4af37' }}
+                        strokeWidth={3} 
+                        strokeDasharray="8 8" 
+                        dot={{ r: 4, fill: '#d4af37', strokeWidth: 0 }}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex flex-col items-center justify-center text-text-muted gap-4">
-                    <BarChart3 size={32} className="opacity-20" />
-                    <p className="text-[10px] font-bold">بيانات غير كافية للمخطط الزمني</p>
+                  <div className="h-full flex flex-col items-center justify-center text-text-muted gap-4">
+                    <BarChart3 size={48} className="opacity-10" />
+                    <p className="text-[12px] font-black uppercase tracking-widest opacity-40">البيانات غير كافية للتحليل الزمني</p>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-border-theme p-5 flex flex-col">
-              <h3 className="text-sm font-bold flex items-center gap-2 mb-6 text-text-dark shrink-0">
-                مقارنة أداء الإدارات مقابل المتوسط العام
-              </h3>
-              <div className="flex-1 h-[300px]">
+            <div className="ministry-card p-10 flex flex-col h-full bg-white relative overflow-hidden">
+              <div className="mb-10 relative z-10">
+                 <h3 className="text-xl font-black text-primary tracking-tight">الكفاءة التشغيلية حسب الإدارات</h3>
+                 <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mt-1">Departmental Efficiency Comparison</p>
+              </div>
+              <div className="flex-1 h-[350px] relative z-10">
                 {departmentComparisonData.length > 0 ? (
                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={departmentComparisonData.slice(0, 8)} layout="vertical" margin={{ left: 20 }}>
+                      <BarChart data={departmentComparisonData.slice(0, 8)} layout="vertical" barGap={8}>
                         <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
                         <XAxis type="number" domain={[0, 100]} hide />
-                        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 'bold', fill: '#64748b' }} width={100} />
+                        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: '700', fill: '#1e293b' }} width={140} />
                         <Tooltip 
-                          cursor={{ fill: '#f8fafc' }}
-                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '10px' }}
+                          cursor={{ fill: 'rgba(5, 10, 20, 0.02)' }}
+                          contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '11px', fontWeight: 'bold' }}
                         />
-                        <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
-                                                 <Bar 
-                           name="متوسط الإدارة" 
+                        <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '20px', fontWeight: 'bold' }} />
+                        <Bar 
+                           name="مؤشر الإدارة" 
                            dataKey="avg" 
-                           fill="#004a99" 
-                           radius={[0, 4, 4, 0]} 
-                           barSize={12} 
+                           fill="#050a14" 
+                           radius={[0, 12, 12, 0]} 
+                           barSize={16} 
                            onClick={(data) => {
                              if (data && data.name) {
                                setDepartmentFilter(data.name === departmentFilter ? 'all' : data.name);
-                               const table = document.getElementById('employee-table');
-                               if (table) table.scrollIntoView({ behavior: 'smooth' });
                              }
                            }}
-                           className="cursor-pointer hover:opacity-80 transition-opacity"
                          />
-
-                        <Bar name="المتوسط العام للوزارة" dataKey="ministryAvg" fill="#d4af37" radius={[0, 4, 4, 0]} barSize={8} />
+                        <Bar name="المعيار الوزاري" dataKey="ministryAvg" fill="#d4af37" radius={[0, 8, 8, 0]} barSize={8} />
                       </BarChart>
                    </ResponsiveContainer>
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-text-muted gap-2">
-                    <History size={32} className="opacity-20" />
-                    <p className="text-[10px] font-bold">لا توجد بيانات مقارنة كافية</p>
+                  <div className="h-full flex flex-col items-center justify-center text-text-muted gap-4">
+                    <History size={48} className="opacity-10" />
+                    <p className="text-[12px] font-black uppercase tracking-widest opacity-40">لا توجد بيانات مقارنة</p>
                   </div>
                 )}
               </div>
@@ -715,19 +739,35 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
         );
       case 'ai-advisor':
         return (
-          <div key={widgetId} className="ai-gradient rounded-lg shadow-md p-5 text-white overflow-hidden relative group h-full flex flex-col justify-between">
-            <div>
-              <h3 className="text-[13px] font-bold mb-4 flex items-center gap-2 text-accent relative z-10">
-                 ✧ تحليل الذكاء الاصطناعي للنمو
-              </h3>
-              <p className="text-[12px] text-white/90 leading-relaxed mb-4 relative z-10">
-                بناءً على التقييمات الشهرية الأخيرة، لوحظ تحسن ملحوظ في مؤشرات الأداء الوزاري.
+          <div key={widgetId} className="ministry-banner p-10 flex flex-col justify-between h-full bg-primary overflow-hidden shadow-premium group">
+            <div className="absolute top-0 right-0 w-full h-full bg-accent/10 blur-[80px] -translate-x-1/2 translate-y-1/2 pointer-events-none opacity-30" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-6">
+                 <div className="w-10 h-10 bg-accent/20 rounded-xl flex items-center justify-center border border-accent/20">
+                    <BrainCircuit size={20} className="text-accent animate-pulse" />
+                 </div>
+                 <h3 className="text-[15px] font-black text-accent uppercase tracking-[0.3em]">
+                   Strategic AI Advisor
+                 </h3>
+              </div>
+              <h4 className="text-2xl font-black text-white leading-tight mb-5">مستشار البيانات الذكي</h4>
+              <p className="text-[14px] text-white/70 leading-loose mb-8">
+                بناءً على أنماط التقييم المرصودة، النظام يتوقع ارتفاعاً بنسبة 12% في الكفاءة التقنية للقطاع الهندسي خلال الربع القادم.
               </p>
               
-              <div className="visual-bar mb-3 relative z-10 bg-white/10">
-                <div className="h-full bg-accent" style={{ width: '75%' }}></div>
+              <div className="space-y-4 mb-10">
+                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-accent/60">
+                   <span>Confidence Level</span>
+                   <span>96.8%</span>
+                </div>
+                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: '96.8%' }}
+                    className="h-full bg-accent shadow-[0_0_15px_rgba(212,175,55,0.4)]" 
+                  />
+                </div>
               </div>
-              <div className="text-[10px] opacity-70 mb-6 relative z-10 text-right">دقة التنبؤ المستندة للبيانات: 94.2%</div>
             </div>
 
             <button 
@@ -738,72 +778,76 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
                 setIsGlobalAnalyzing(false);
               }}
               disabled={isGlobalAnalyzing}
-              className="w-full py-2 bg-white/10 hover:bg-white/20 rounded text-[11px] font-bold flex items-center justify-center gap-2 transition-all relative z-10 border border-white/20 uppercase tracking-widest"
+              className="relative z-10 w-full py-5 bg-white text-primary rounded-2xl text-[13px] font-black flex items-center justify-center gap-4 transition-all hover:bg-accent hover:text-primary shadow-xl shadow-black/20 uppercase tracking-widest"
             >
               {isGlobalAnalyzing ? (
-                <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-5 h-5 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
               ) : (
-                <>توليد التقرير الاستراتيجي <ArrowUpRight className="w-3 h-3" /></>
+                <>توليد التقارير الاستباقية <ArrowUpRight className="w-4 h-4" /></>
               )}
             </button>
           </div>
         );
       case 'fingerprint-sync':
         return (
-          <div key={widgetId} className="bg-white rounded-lg border border-border-theme p-6 shadow-sm h-full flex flex-col">
-            <h3 className="text-sm font-bold flex items-center gap-2 mb-6 text-text-dark">
-              <Fingerprint size={18} className="text-primary" />
-              تكامل أجهزة البصمة الذكية
-            </h3>
+          <div key={widgetId} className="ministry-card p-10 flex flex-col h-full bg-white relative z-10 group">
+            <div className="flex items-center gap-5 mb-8">
+               <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-primary border border-border-theme shadow-inner group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                  <Fingerprint size={24} />
+               </div>
+               <div>
+                  <h3 className="text-xl font-black text-primary tracking-tight">التكامل البيومتري</h3>
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mt-1">Biometric Cloud Sync</p>
+               </div>
+            </div>
             <FingerprintIntegration />
           </div>
         );
       case 'employee-table':
         return (
-          <div key={widgetId} id="employee-table" className="card-modern overflow-hidden mt-8 border-none secure-glow relative z-10">
-            <div className="p-10 border-b border-border-theme flex flex-col lg:flex-row lg:items-center justify-between gap-8 bg-white/50 backdrop-blur-md">
+          <div key={widgetId} id="employee-table" className="ministry-card overflow-hidden mt-12 bg-white relative z-10 border-none shadow-premium">
+            <div className="p-12 border-b border-border-theme flex flex-col xl:flex-row xl:items-center justify-between gap-10 bg-white/50 backdrop-blur-md">
                 <div>
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                    <span className="text-[11px] font-black text-accent uppercase tracking-[0.3em]">Workforce Integrity Hub</span>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                    <span className="text-[12px] font-black text-accent uppercase tracking-[0.4em]">Integrated Human Capital Directory</span>
                   </div>
-                  <h3 className="text-4xl font-black text-primary tracking-tighter leading-none mb-2">إدارة القوة البشرية والبيانات البيومترية</h3>
-                  <p className="text-[13px] font-bold text-text-muted opacity-60">تتبع حي لأداء الكادر الوظيفي وتكامل أجهزة البصمة الذكية للحوسبة السحابية</p>
+                  <h3 className="text-4xl font-black text-primary tracking-tighter leading-none mb-3">سجل الكادر الوظيفي العام</h3>
+                  <p className="text-[15px] font-bold text-text-muted opacity-60">النظام المركزي لمراقبة وتوزيع الموارد البشرية والمهارات التخصصية</p>
                 </div>
-                <div className="flex flex-wrap gap-4 items-center">
-                   <div className="relative group min-w-[320px]">
-                      <Search className="absolute right-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={20} />
+                <div className="flex flex-wrap gap-6 items-center">
+                   <div className="relative group min-w-[350px]">
+                      <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={22} />
                       <input 
                         type="text" 
-                        placeholder="البحث الذكي بالاسم أو الرقم..." 
-                        className="w-full pr-14 pl-6 py-5 bg-slate-50/50 border border-border-theme rounded-2xl text-[13px] font-bold outline-none focus:bg-white focus:border-primary focus:ring-8 focus:ring-primary/5 transition-all shadow-inner"
+                        placeholder="البحث بالاسم، الرقم الوظيفي، أو الكود..." 
+                        className="ministry-input pr-16"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
                    </div>
                    <button 
                      onClick={handleExportEmployeesCSV}
-                     className="px-8 h-[60px] bg-white border border-border-theme rounded-2xl text-[12px] font-black hover:bg-slate-50 transition-all flex items-center gap-4 shadow-sm hover:shadow-md group"
+                     className="px-10 h-16 bg-white border border-border-theme rounded-2xl text-[13px] font-black hover:bg-slate-50 transition-all flex items-center gap-4 shadow-sm hover:shadow-md group"
                    >
-                     <FileDown size={20} className="text-accent group-hover:-translate-y-1 transition-transform" /> تصدير السجلات
+                     <FileDown size={22} className="text-accent group-hover:-translate-y-1 transition-transform" /> تصدير السجلات المعتمدة
                    </button>
                 </div>
             </div>
 
-            {/* Premium Filter Orchestra */}
-            <div className="p-8 bg-slate-50/30 border-b border-border-theme flex flex-wrap items-center gap-10">
-               <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center text-accent">
-                    <Filter size={18} />
+            <div className="p-10 bg-slate-50/50 border-b border-border-theme flex flex-wrap items-center gap-12">
+               <div className="flex items-center gap-5">
+                  <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-accent shadow-premium">
+                    <Filter size={20} />
                   </div>
-                  <span className="text-[12px] font-black text-primary uppercase tracking-widest">تصفية المعايير:</span>
+                  <span className="text-[14px] font-black text-primary uppercase tracking-[0.1em]">أدوات التصفية المتقدمة:</span>
                </div>
                
-               <div className="flex items-center gap-8 flex-1">
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest opacity-50 block mr-2">إدارة القسم</label>
+               <div className="flex items-center gap-12 flex-1">
+                 <div className="space-y-3">
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest opacity-50 block mr-2">إدارة القسم</label>
                     <select 
-                      className="bg-white border border-border-theme px-6 py-3 rounded-xl text-[12px] font-bold outline-none cursor-pointer focus:border-primary hover:border-accent transition-colors shadow-sm"
+                      className="bg-white border border-border-theme px-8 py-4 rounded-xl text-[13px] font-bold outline-none cursor-pointer focus:border-primary hover:border-accent transition-colors shadow-sm"
                       value={departmentFilter}
                       onChange={(e) => setDepartmentFilter(e.target.value)}
                     >
@@ -814,10 +858,10 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
                     </select>
                  </div>
 
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest opacity-50 block mr-2">التصنيف الفني</label>
+                 <div className="space-y-3">
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest opacity-50 block mr-2">التصنيف الفني</label>
                     <select 
-                      className="bg-white border border-border-theme px-6 py-3 rounded-xl text-[12px] font-bold outline-none cursor-pointer focus:border-primary hover:border-accent transition-colors shadow-sm"
+                      className="bg-white border border-border-theme px-8 py-4 rounded-xl text-[13px] font-bold outline-none cursor-pointer focus:border-primary hover:border-accent transition-colors shadow-sm"
                       value={selectedType}
                       onChange={(e) => setSelectedType(e.target.value as any)}
                     >
@@ -827,10 +871,10 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
                     </select>
                  </div>
 
-                 <div className="space-y-2">
-                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest opacity-50 block mr-2">الفئة الوظيفية</label>
+                 <div className="space-y-3">
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest opacity-50 block mr-2">الفئة الوظيفية</label>
                     <select 
-                      className="bg-white border border-border-theme px-6 py-3 rounded-xl text-[12px] font-bold outline-none cursor-pointer focus:border-primary hover:border-accent transition-colors shadow-sm"
+                      className="bg-white border border-border-theme px-8 py-4 rounded-xl text-[13px] font-bold outline-none cursor-pointer focus:border-primary hover:border-accent transition-colors shadow-sm"
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value as any)}
                     >
@@ -847,12 +891,12 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
               <table className="w-full text-right border-collapse">
                 <thead>
                   <tr className="bg-slate-50/50 border-b-2 border-slate-100">
-                    <th className="px-10 py-6 text-[11px] font-black text-text-muted uppercase tracking-[0.2em]">الاسم والمنصب</th>
-                    <th className="px-10 py-6 text-[11px] font-black text-text-muted uppercase tracking-[0.2em] cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort('employeeId')}>الرقم الوظيفي {getSortIcon('employeeId')}</th>
-                    <th className="px-10 py-6 text-[11px] font-black text-text-muted uppercase tracking-[0.2em]">التنظيم الإداري</th>
-                    <th className="px-10 py-6 text-[11px] font-black text-text-muted uppercase tracking-[0.2em]">مؤشر الأداء الرسمي</th>
-                    <th className="px-10 py-6 text-[11px] font-black text-text-muted uppercase tracking-[0.2em]">البصمة البيومترية</th>
-                    <th className="px-10 py-6 text-[11px] font-black text-text-muted uppercase tracking-[0.2em] text-center">أدوات التحكم</th>
+                    <th className="px-12 py-8 text-[12px] font-black text-text-muted uppercase tracking-[0.2em]">الاسم والمنصب</th>
+                    <th className="px-12 py-8 text-[12px] font-black text-text-muted uppercase tracking-[0.2em] cursor-pointer hover:text-primary transition-colors" onClick={() => handleSort('employeeId')}>الرقم الوظيفي {getSortIcon('employeeId')}</th>
+                    <th className="px-12 py-8 text-[12px] font-black text-text-muted uppercase tracking-[0.2em]">التنظيم الإداري</th>
+                    <th className="px-12 py-8 text-[12px] font-black text-text-muted uppercase tracking-[0.2em]">مؤشر الأداء الرسمي</th>
+                    <th className="px-12 py-8 text-[12px] font-black text-text-muted uppercase tracking-[0.2em]">البصمة البيومترية</th>
+                    <th className="px-12 py-8 text-[12px] font-black text-text-muted uppercase tracking-[0.2em] text-center">أدوات التحكم</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white/40">
@@ -865,38 +909,38 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: idx * 0.04 }}
-                          className="group hover:bg-slate-50/80 transition-all cursor-default"
+                          className="group hover:bg-slate-100 transition-all cursor-default"
                          >
-                            <td className="px-10 py-8">
-                               <div className="flex items-center gap-6">
-                                  <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-lg font-black text-primary border border-slate-200 group-hover:scale-110 group-hover:rotate-3 transition-all shadow-sm">
+                            <td className="px-12 py-10">
+                               <div className="flex items-center gap-8">
+                                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-xl font-black text-primary border border-slate-200 group-hover:scale-110 group-hover:rotate-3 transition-all shadow-sm">
                                      {emp.name[0]}
                                   </div>
                                   <div>
-                                     <div className="text-base font-black text-primary group-hover:text-accent transition-colors">{emp.name}</div>
-                                     <div className="text-[11px] font-bold text-text-muted mt-1 flex items-center gap-2 opacity-60">
-                                        <Award size={14} className="text-accent" /> {emp.position}
+                                     <div className="text-[17px] font-black text-primary group-hover:text-accent transition-colors">{emp.name}</div>
+                                     <div className="text-[12px] font-bold text-text-muted mt-2 flex items-center gap-2 opacity-60">
+                                        <Award size={16} className="text-accent" /> {emp.position}
                                      </div>
                                   </div>
                                </div>
                             </td>
-                            <td className="px-10 py-8">
-                               <span className="font-mono text-xs font-black text-slate-400 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 select-all group-hover:border-primary group-hover:text-primary transition-colors">{emp.employeeId}</span>
+                            <td className="px-12 py-10">
+                               <span className="font-mono text-xs font-black text-slate-400 bg-slate-50 px-5 py-3 rounded-xl border border-slate-200 select-all group-hover:border-primary group-hover:text-primary transition-colors">{emp.employeeId}</span>
                             </td>
-                            <td className="px-10 py-8">
-                               <div className="space-y-2">
-                                  <div className="text-[13px] font-black text-primary flex items-center gap-3">
-                                     <div className="w-1.5 h-1.5 rounded-full bg-accent" /> {emp.department}
+                            <td className="px-12 py-10">
+                               <div className="space-y-3">
+                                  <div className="text-[14px] font-black text-primary flex items-center gap-3">
+                                     <div className="w-2 h-2 rounded-full bg-accent" /> {emp.department}
                                   </div>
                                   {emp.secondDepartment && (
-                                     <div className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100/50 inline-block">دائرة إضافية: {emp.secondDepartment}</div>
+                                     <div className="text-[11px] font-black text-emerald-600 bg-emerald-50 px-4 py-1.5 rounded-lg border border-emerald-100/50 inline-block font-sans">Assignment: {emp.secondDepartment}</div>
                                   )}
                                </div>
                             </td>
-                            <td className="px-10 py-8">
+                            <td className="px-12 py-10">
                                {score !== null ? (
-                                  <div className="flex items-center gap-5">
-                                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-[12px] font-black border-2 shadow-inner ${
+                                  <div className="flex items-center gap-6">
+                                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-[13px] font-black border-2 shadow-inner ${
                                         score >= 90 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                                         score >= 75 ? 'bg-blue-50 text-blue-600 border-blue-100' :
                                         score >= 50 ? 'bg-amber-50 text-amber-600 border-amber-100' :
@@ -904,51 +948,51 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
                                      }`}>
                                         %{score.toFixed(0)}
                                      </div>
-                                     <div className="flex-1 min-w-[80px]">
-                                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">
+                                     <div className="flex-1 min-w-[100px]">
+                                        <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shadow-inner">
                                            <motion.div 
                                              initial={{ width: 0 }}
                                              animate={{ width: `${score}%` }}
-                                             className={`h-full ${score >= 90 ? 'bg-emerald-500' : score >= 75 ? 'bg-blue-500' : 'bg-red-500'} shadow-[0_0_10px_rgba(0,0,0,0.1)]`} 
+                                             className={`h-full ${score >= 90 ? 'bg-emerald-500' : score >= 75 ? 'bg-blue-500' : 'bg-red-500'} shadow-[0_0_15px_rgba(0,0,0,0.1)]`} 
                                            />
                                         </div>
-                                        <div className="text-[9px] font-black text-text-muted mt-2 uppercase tracking-widest opacity-40">Performance Tier: {score >= 90 ? 'Excellence' : 'Standard'}</div>
+                                        <div className="text-[10px] font-black text-text-muted mt-3 uppercase tracking-widest opacity-40">Ministerial Tier: {score >= 90 ? 'Excellent' : 'Standard'}</div>
                                      </div>
                                   </div>
                                ) : (
-                                  <div className="flex items-center gap-3 text-slate-300">
-                                     <Calendar size={16} />
-                                     <span className="text-[11px] font-bold italic">بانتظار دورة التقييم</span>
+                                  <div className="flex items-center gap-4 text-slate-300">
+                                     <Calendar size={20} />
+                                     <span className="text-[12px] font-bold italic">دورة لم يتم رصدها</span>
                                   </div>
                                )}
                             </td>
-                            <td className="px-10 py-8">
-                               <div className={`inline-flex items-center gap-3 px-4 py-2 rounded-2xl border-2 transition-all ${
-                                  emp.biometricStatus === 'online' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-100 text-red-700 border-red-200 animate-pulse'
+                            <td className="px-12 py-10">
+                               <div className={`inline-flex items-center gap-4 px-6 py-3 rounded-2xl border-2 transition-all ${
+                                  emp.biometricStatus === 'online' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-100 text-red-700 border-red-200'
                                }`}>
-                                  <div className={`w-2 h-2 rounded-full ${emp.biometricStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`} />
-                                  <span className="text-[11px] font-black uppercase tracking-tight">{emp.biometricStatus === 'online' ? 'Synced-Cloud' : 'Desynced'}</span>
-                               </div>
+                                  <div className={`w-2.5 h-2.5 rounded-full ${emp.biometricStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]' : 'bg-red-500'}`} />
+                                  <span className="text-[12px] font-black uppercase tracking-tight">{emp.biometricStatus === 'online' ? 'Cloud-Synced' : 'Offline'}</span>
+                                </div>
                             </td>
-                            <td className="px-10 py-8">
-                               <div className="flex items-center justify-center gap-3">
+                            <td className="px-12 py-10">
+                               <div className="flex items-center justify-center gap-4">
                                   <button 
                                     onClick={() => navigate(`/details/${emp.id}`)}
-                                    className="p-3 bg-white text-primary border border-slate-200 hover:bg-primary hover:text-white hover:border-primary rounded-2xl transition-all shadow-sm hover:shadow-xl hover:-translate-y-1"
+                                    className="p-4 bg-white text-primary border border-slate-200 hover:bg-primary hover:text-white hover:border-primary rounded-2xl transition-all shadow-sm hover:shadow-xl hover:-translate-y-1"
                                     title="تحليل الملف الكامل"
                                   >
-                                    <BrainCircuit size={18} />
+                                    <BrainCircuit size={20} />
                                   </button>
                                   <button 
                                     onClick={() => onEditEmployee(emp)}
-                                    className="p-3 bg-white text-slate-500 border border-slate-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-2xl transition-all shadow-sm hover:shadow-xl hover:-translate-y-1"
+                                    className="p-4 bg-white text-slate-500 border border-slate-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-2xl transition-all shadow-sm hover:shadow-xl hover:-translate-y-1"
                                     title="تحديث البيانات المعيارية"
                                   >
-                                    <FileEdit size={18} />
+                                    <FileEdit size={20} />
                                   </button>
                                   <button 
                                     onClick={() => onEvaluateUser(emp)}
-                                    className="px-6 py-3 bg-accent text-primary text-[11px] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-accent/20 hover:bg-white hover:border-accent border border-transparent"
+                                    className="px-8 py-4 bg-accent text-primary text-[12px] font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-accent/20 hover:bg-white hover:border-accent border border-transparent"
                                   >
                                     توليد تقييم
                                   </button>
@@ -962,45 +1006,50 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
               </table>
             </div>
 
-            {/* Premium Strategic Pagination */}
-            <div className="p-10 border-t border-slate-100 bg-slate-50/50 flex flex-col md:flex-row items-center justify-between gap-8">
-               <div className="flex items-center gap-6">
-                  <div className="text-[12px] font-black text-text-muted uppercase tracking-[0.3em] opacity-40">Workforce Statistics:</div>
-                  <div className="px-6 py-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
-                    <span className="text-[12px] font-black text-primary">عرض {paginatedEmployees.length} سجل ذكي</span>
-                    <span className="mx-3 opacity-20">|</span>
-                    <span className="text-[12px] font-black text-accent">إجمالي {filteredEmployees.length}</span>
-                  </div>
-               </div>
-               <div className="flex items-center gap-4">
-                  <button 
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(prev => prev - 1)}
-                    className="w-14 h-14 bg-white border border-slate-200 rounded-2xl flex items-center justify-center hover:bg-primary hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
-                  >
-                    <ChevronRight size={24} />
-                  </button>
-                  <div className="flex gap-3 bg-white/50 p-2 rounded-[2rem] border border-white shadow-inner">
-                     {[...Array(totalPages)].map((_, i) => (
-                        <button 
-                          key={i}
-                          onClick={() => setCurrentPage(i + 1)}
-                          className={`w-12 h-12 rounded-2xl text-xs font-black transition-all ${
-                            currentPage === i + 1 ? 'bg-primary text-white shadow-2xl shadow-primary/30 scale-110' : 'bg-white border border-slate-100 text-text-muted hover:bg-slate-50 shadow-sm'
-                          }`}
-                        >
-                          {i + 1}
-                        </button>
-                     ))}
-                  </div>
-                  <button 
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(prev => prev + 1)}
-                    className="w-14 h-14 bg-white border border-slate-200 rounded-2xl flex items-center justify-center hover:bg-primary hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
-                  >
-                    <ChevronLeft size={24} />
-                  </button>
-               </div>
+            <div className="p-12 border-t border-slate-100 bg-slate-50/50 flex flex-col md:flex-row items-center justify-between gap-10">
+                <div className="flex items-center gap-8">
+                   <div className="text-[13px] font-black text-text-muted uppercase tracking-[0.4em] opacity-40">Human Capital Registry:</div>
+                   <div className="flex items-center gap-4 bg-white px-6 py-3 rounded-2xl border border-border-theme shadow-sm">
+                      <div className="flex -space-x-4 space-x-reverse">
+                         {employees.slice(0, 5).map((e, i) => (
+                           <div key={i} className="w-10 h-10 rounded-full bg-slate-100 border-4 border-white flex items-center justify-center text-[10px] font-black text-primary">
+                             {e.name[0]}
+                           </div>
+                         ))}
+                      </div>
+                      <span className="text-[12px] font-black text-primary">+{employees.length - 5} كوادر مرصودة</span>
+                   </div>
+                </div>
+
+                <div className="flex items-center gap-6">
+                   <button 
+                     disabled={currentPage === 1}
+                     onClick={() => setCurrentPage(prev => prev - 1)}
+                     className="w-16 h-16 bg-white border border-border-theme rounded-2xl flex items-center justify-center hover:bg-primary hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all shadow-premium active:scale-95 group"
+                   >
+                     <ChevronRight size={28} className="group-hover:-translate-x-1 transition-transform" />
+                   </button>
+                   <div className="flex gap-4 bg-white/40 p-3 rounded-[3rem] border border-white/50 backdrop-blur-md shadow-inner">
+                      {[...Array(totalPages)].map((_, i) => (
+                         <button 
+                           key={i}
+                           onClick={() => setCurrentPage(i + 1)}
+                           className={`w-14 h-14 rounded-2xl text-[14px] font-black transition-all ${
+                             currentPage === i + 1 ? 'bg-primary text-white shadow-premium scale-110' : 'bg-white border border-slate-100 text-text-muted hover:bg-slate-50 shadow-sm'
+                           }`}
+                         >
+                           {i + 1}
+                         </button>
+                      ))}
+                   </div>
+                   <button 
+                     disabled={currentPage === totalPages}
+                     onClick={() => setCurrentPage(prev => prev + 1)}
+                     className="w-16 h-16 bg-white border border-border-theme rounded-2xl flex items-center justify-center hover:bg-primary hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all shadow-premium active:scale-95 group"
+                   >
+                     <ChevronLeft size={28} className="group-hover:translate-x-1 transition-transform" />
+                   </button>
+                </div>
             </div>
           </div>
         );
@@ -1237,14 +1286,10 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
                         className={`${widgetId === 'perf-summary' || widgetId === 'main-chart' || widgetId === 'employee-table' ? 'lg:col-span-3' : 'lg:col-span-1'} ${snapshot.isDragging ? 'z-50 opacity-80' : ''}`}
                       >
                         <div className="relative group/widget">
-                          {widgetId === 'employee-table' ? widget : (
-                            <>
-                              <div {...provided.dragHandleProps} className="absolute top-4 left-4 z-20 p-2 opacity-0 group-hover/widget:opacity-100 transition-opacity cursor-grab active:cursor-grabbing bg-white/20 backdrop-blur rounded-lg border border-white/20 text-white">
-                                <GripVertical size={14} />
-                              </div>
-                              {widget}
-                            </>
-                          )}
+                          <div {...provided.dragHandleProps} className="absolute top-4 left-4 z-20 p-2 opacity-0 group-hover/widget:opacity-100 transition-opacity cursor-grab active:cursor-grabbing bg-white/20 backdrop-blur rounded-lg border border-white/20 text-white">
+                            <GripVertical size={14} />
+                          </div>
+                          {widget}
                         </div>
                       </div>
                     )}
@@ -1408,37 +1453,53 @@ export default function Dashboard({ user, onUpdateUser, onAddEmployee, onEditEmp
 function StatCard({ icon, label, value, trend, color }: { icon: any, label: string, value: string, trend: string, color: string }) {
   return (
     <motion.div 
-      whileHover={{ y: -12, scale: 1.05 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className="card-modern p-10 flex flex-col justify-between min-h-[220px] group relative overflow-hidden active:scale-95 transition-all duration-500"
+      whileHover={{ y: -10, scale: 1.02 }}
+      transition={{ type: 'spring', stiffness: 300 }}
+      className="ministry-card p-10 flex flex-col justify-between min-h-[260px] group relative overflow-hidden bg-white"
     >
-      <div className={`absolute top-0 right-0 w-32 h-32 ${color.replace('bg-', 'bg-')}/5 rounded-full blur-3xl -translate-y-16 -translate-x-16 pointer-events-none group-hover:scale-150 transition-transform duration-700`} />
+      {/* Dynamic Background Elements */}
+      <div className={`absolute top-0 right-0 w-48 h-48 ${color}/5 rounded-full blur-[60px] -translate-y-24 translate-x-12 pointer-events-none group-hover:scale-150 transition-transform duration-1000`} />
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-slate-50 rounded-full blur-3xl translate-y-16 -translate-x-16 pointer-events-none" />
       
-      <div className="flex justify-between items-start relative z-10">
-        <div className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-primary/10 group-hover:rotate-6 transition-transform duration-500`}>
-          {React.cloneElement(icon as React.ReactElement<any>, { size: 28 })}
+      {/* Icon & Status Pill */}
+      <div className="flex justify-between items-start relative z-10 mb-8">
+        <div className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center text-white shadow-premium group-hover:rotate-6 transition-all duration-500`}>
+          {React.cloneElement(icon as React.ReactElement<any>, { size: 32 })}
         </div>
-                    <div className="flex flex-col items-end">
-                       <span className="text-[10px] font-bold text-text-muted uppercase tracking-[0.2em] mb-1 opacity-50 font-sans">Status</span>
-                       <span className="px-3 py-1.5 bg-white/50 backdrop-blur-md rounded-full text-[9px] font-bold text-emerald-600 border border-emerald-100 flex items-center gap-1.5 shadow-sm">
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          ACTIVE
-                       </span>
-                    </div>
+        <div className="flex items-center gap-3 bg-slate-50/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-100 shadow-sm">
+           <div className={`w-2 h-2 rounded-full ${color} animate-pulse`} />
+           <span className="text-[10px] font-black text-primary uppercase tracking-[0.1em]">سيادي</span>
+        </div>
       </div>
 
-      <div className="mt-8 relative z-10">
-        <div className="text-[11px] font-bold text-text-muted uppercase tracking-[0.25em] mb-3 opacity-60 group-hover:opacity-100 transition-opacity font-sans">{label}</div>
-        <div className="flex items-baseline gap-3">
+      {/* Content */}
+      <div className="relative z-10 flex-1 flex flex-col justify-end">
+        <div className="text-[11px] font-black text-text-muted uppercase tracking-[0.3em] mb-3 opacity-60 group-hover:opacity-100 transition-opacity">
+          {label}
+        </div>
+        <div className="flex items-baseline gap-4">
           <div className="text-5xl font-black text-primary tracking-tighter group-hover:text-accent transition-colors duration-500">
             {value}
           </div>
           {trend && (
-            <div className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100 mb-1">
-              {trend}
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-accent uppercase tracking-widest leading-none mb-1">Status</span>
+              <span className="text-[11px] font-extrabold text-text-muted italic opacity-50 whitespace-nowrap">
+                {trend}
+              </span>
             </div>
           )}
         </div>
+      </div>
+      
+      {/* Decorative Bottom Bar */}
+      <div className="absolute bottom-0 right-0 left-0 h-2 bg-slate-100/30">
+        <div className={`h-full ${color} w-1/4 group-hover:w-full transition-all duration-700 ease-in-out`} />
+      </div>
+
+      {/* Hover Reveal Pattern */}
+      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none rotate-12">
+         <Building2 size={80} />
       </div>
     </motion.div>
   );

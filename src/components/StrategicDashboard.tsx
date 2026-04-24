@@ -20,7 +20,8 @@ import {
   Trophy,
   Activity,
   Zap,
-  Sparkles
+  Sparkles,
+  Cpu
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { aggregateMinistryAnalysis } from '../services/geminiService.ts';
@@ -111,184 +112,226 @@ export default function StrategicDashboard() {
   }, [allEvaluations]);
 
   return (
-    <div className="space-y-12 pb-20">
-      {/* Strategic Hero Section */}
-      <div className="relative h-[480px] rounded-[3.5rem] bg-primary overflow-hidden flex flex-col justify-center px-16 shadow-2xl">
-        <div className="absolute top-0 right-0 w-full h-full opacity-10">
-          <div className="absolute top-10 right-20 w-96 h-96 bg-accent rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-10 left-20 w-[500px] h-[500px] bg-secondary rounded-full blur-[150px]" />
+    <div className="space-y-12 pb-24 px-4 md:px-8 max-w-[1600px] mx-auto animate-in fade-in duration-1000">
+      {/* Strategic Hero Section - Ministry Grade */}
+      <div className="relative min-h-[550px] rounded-[4rem] bg-primary overflow-hidden flex flex-col justify-center px-12 md:px-20 shadow-premium group">
+        <div className="absolute inset-0 glossy-mesh opacity-60" />
+        <div className="absolute top-0 right-0 w-full h-full opacity-20 overflow-hidden">
+          <div className="absolute top-[-10%] right-[-10%] w-1/2 h-1/2 bg-accent rounded-full blur-[150px] animate-pulse" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-1/3 h-1/3 bg-blue-400 rounded-full blur-[120px]" />
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
         </div>
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5" />
         
-        <div className="relative z-10 max-w-4xl">
+        <div className="relative z-10 max-w-5xl">
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-3 px-6 py-2.5 bg-white/10 backdrop-blur-md rounded-full text-accent text-[11px] font-black uppercase tracking-[0.3em] mb-10 border border-white/10 shadow-inner"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="inline-flex items-center gap-4 px-8 py-3 bg-white/10 backdrop-blur-xl rounded-full text-accent text-[12px] font-black uppercase tracking-[0.4em] mb-12 border border-white/20 shadow-premium"
           >
-            <Sparkles size={14} className="animate-spin-slow" /> Strategic Performance Unit
+            <div className="w-2 h-2 rounded-full bg-accent animate-ping" />
+            Strategic Intelligence Division
           </motion.div>
           <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-7xl font-black text-white leading-[1.1] tracking-tighter mb-8"
+            className="text-6xl md:text-8xl font-black text-white leading-[1] tracking-tighter mb-10"
           >
-            منصة التحليل <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/60">الاستراتيجي</span> الذكي
+            مركز تحليل <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-accent/80 to-accent/40 drop-shadow-2xl">الأداء الاستراتيجي</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-white/50 font-medium leading-relaxed max-w-2xl mb-12"
+            className="text-lg md:text-2xl text-white/60 font-medium leading-relaxed max-w-3xl mb-14"
           >
-            نظام متقدم يعتمد على الذكاء الاصطناعي لرصد التوجهات الاستراتيجية، قياس الكفاءة المؤسسية، واستشراف مستقبل الأداء في كافة قطاعات الوزارة.
+            النظام السيادي الموحد لاستشراف جودة المخرجات المؤسسية وقياس مؤشرات النمو في الكادر البشري التابع لوزارة الاتصالات وتقنية المعلومات.
           </motion.p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-6">
             <button 
               onClick={runStrategicAnalysis}
               disabled={isAnalyzing}
-              className="btn-modern btn-accent flex items-center gap-4 px-10 h-16 text-[13px] group disabled:opacity-50"
+              className="btn-modern bg-accent text-primary flex items-center gap-5 px-12 h-20 text-[15px] font-black group disabled:opacity-50 shadow-premium hover:shadow-accent/20"
             >
               {isAnalyzing ? (
                 <>
-                  <RefreshCw className="animate-spin" size={24} />
-                  جاري معالجة البيانات الضخمة...
+                  <RefreshCw className="animate-spin" size={26} />
+                  جاري تحليل الارتباطات الضخمة...
                 </>
               ) : (
                 <>
-                  <BrainCircuit size={24} className="group-hover:rotate-12 transition-transform" />
-                  توليد التقرير الاستراتيجي
+                  <BrainCircuit size={26} className="group-hover:rotate-12 transition-transform" />
+                  تفعيل الخوارزمية الاستراتيجية
                 </>
               )}
             </button>
+            <div className="flex items-center gap-5 px-8 h-20 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md">
+               <div className="text-right">
+                  <div className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Status</div>
+                  <div className="text-emerald-400 text-sm font-black flex items-center gap-2">
+                     <span className="w-2 h-2 rounded-full bg-emerald-400" /> Operational
+                  </div>
+               </div>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* KPI Grid - Reusing StrategicStat with Ministry Style */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         <StrategicStat 
-          label="كفاءة الأداء العام" 
+          label="معدل الكفاءة الموحد" 
           value={`${stats.avgScore.toFixed(1)}%`} 
-          desc="متوسط مؤشر الإنجاز المؤسسي" 
+          desc="المتوسط الوزاري العام للأداء" 
           icon={<Activity />} 
         />
         <StrategicStat 
-          label="إجمالي التقارير" 
+          label="السجلات المعتمدة" 
           value={stats.totalEvaluations} 
-          desc="سجلات التقييم المعتمدة" 
+          desc="إجمالي دورات التقييم المكتملة" 
           icon={<Zap />} 
         />
         <StrategicStat 
-          label="الإدارة الأعلى أداءً" 
+          label="قطاع التميز" 
           value={stats.topDept} 
-          desc="التميز التشغيلي والقيادي" 
+          desc="الإدارة الحائزة على أعلى تقييم" 
           icon={<Trophy />} 
         />
         <StrategicStat 
-          label="نطاق التحدي" 
+          label="المؤشر الاستباقي" 
           value={stats.riskDept} 
-          desc="تتطلب تطوير ومتابعة حثيثة" 
+          desc="القطاع المستهدف للتحسين" 
           icon={<Target />} 
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <div className="lg:col-span-2 luxury-card p-12 relative">
-            <div className="flex justify-between items-center mb-16">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        {/* Department Performance Chart Case */}
+        <div className="lg:col-span-2 ministry-card p-12 relative overflow-hidden bg-white">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16 relative z-10">
                <div>
-                 <h3 className="text-3xl font-black text-primary tracking-tighter">مؤشرات الكفاءة القطاعية</h3>
-                 <p className="technical-label mt-2">Departmental Performance Benchmarking v4.0</p>
+                 <div className="flex items-center gap-4 mb-4">
+                    <div className="w-1.5 h-6 bg-accent rounded-full" />
+                    <span className="text-[12px] font-black text-accent uppercase tracking-[0.4em]">Sectoral Benchmark Matrix</span>
+                 </div>
+                 <h3 className="text-4xl font-black text-primary tracking-tighter">مقارنة أداء القطاعات</h3>
                </div>
-               <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner">
-                  <Activity size={24} className="text-accent" />
+               <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <div className="text-[10px] font-black text-text-muted uppercase tracking-widest opacity-50">Data Refresh Rate</div>
+                    <div className="text-[12px] font-black text-primary">Live Ministry Feed</div>
+                  </div>
+                  <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-accent border border-slate-100 shadow-inner">
+                    <BarChart3 size={24} />
+                  </div>
                </div>
             </div>
-            <div className="h-[480px]">
+            
+            <div className="h-[550px] relative z-10 pr-4">
                <ResponsiveContainer width="100%" height="100%">
-                 <BarChart data={deptChartData} layout="vertical" margin={{ left: 30, right: 30 }}>
+                 <BarChart data={deptChartData} layout="vertical" margin={{ left: 40, right: 40, top: 0, bottom: 0 }}>
                    <defs>
-                     <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+                     <linearGradient id="premiumBarGradient" x1="0" y1="0" x2="1" y2="0">
                        <stop offset="0%" stopColor="#0a192f" />
-                       <stop offset="100%" stopColor="#c5a059" />
+                       <stop offset="100%" stopColor="#c5a059" stopOpacity={0.8} />
                      </linearGradient>
                    </defs>
-                   <CartesianGrid strokeDasharray="6 6" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                   <CartesianGrid strokeDasharray="8 8" horizontal={false} vertical={true} stroke="#f1f5f9" />
                    <XAxis type="number" domain={[0, 100]} hide />
                    <YAxis 
                      dataKey="name" 
                      type="category" 
                      axisLine={false} 
                      tickLine={false} 
-                     tick={{ fontSize: 13, fontWeight: 'black', fill: '#0a192f', fontFamily: 'Inter' }} 
-                     width={150} 
+                     tick={{ fontSize: 13, fontWeight: 900, fill: '#0a192f', fontFamily: 'Vazirmatn' }} 
+                     width={180} 
+                     textAnchor="end"
+                     dx={-15}
                    />
                    <Tooltip 
-                     cursor={{ fill: 'rgba(10, 25, 47, 0.03)' }}
+                     cursor={{ fill: 'rgba(10, 25, 47, 0.02)' }}
                      contentStyle={{ 
-                       borderRadius: '24px', 
-                       border: '1px solid #e2e8f0', 
-                       boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)', 
-                       fontSize: '12px', 
+                       borderRadius: '2rem', 
+                       border: 'none', 
+                       boxShadow: '0 40px 60px -15px rgba(0,0,0,0.15)', 
+                       fontSize: '13px', 
                        direction: 'rtl', 
-                       fontWeight: 'bold',
-                       background: 'white'
+                       fontWeight: 900,
+                       background: 'rgba(255,255,255,0.95)',
+                       backdropFilter: 'blur(10px)',
+                       padding: '20px'
                      }}
                    />
                    <Bar 
                      dataKey="avg" 
-                     fill="url(#barGradient)" 
-                     radius={[0, 10, 10, 0]} 
+                     fill="url(#premiumBarGradient)" 
+                     radius={[0, 20, 20, 0]} 
                      barSize={32}
+                     animationBegin={500}
+                     animationDuration={1500}
                    >
                      {deptChartData.map((entry, index) => (
-                       <Cell key={`cell-${index}`} />
+                       <Cell key={`cell-${index}`} className="hover:opacity-80 transition-opacity" />
                      ))}
                    </Bar>
                  </BarChart>
                </ResponsiveContainer>
             </div>
+            {/* Artistic background element */}
+            <div className="absolute bottom-[-10%] right-[-5%] w-1/3 h-1/3 bg-slate-50 rounded-full blur-[100px] pointer-events-none" />
         </div>
 
-        <div className="luxury-card flex flex-col group">
-              <div className="p-10 bg-primary border-b border-primary/20 relative overflow-hidden">
-                 <div className="absolute top-0 right-0 w-40 h-40 bg-accent/20 rounded-full blur-[60px] -translate-y-20 -translate-x-10 pointer-events-none" />
-                 <div className="relative z-10">
-                   <h3 className="text-xl font-bold flex items-center gap-4 text-white uppercase tracking-tight">
-                      <BrainCircuit className="text-accent" size={24} />
-                      تقرير هيئة الاستخبارات الإدارية
-                   </h3>
-                   <div className="technical-label text-white/40 mt-3 opacity-100">CONFIDENTIAL • AI STRATEGIC BRIEF</div>
+        {/* AI Strategic Intelligence Feed */}
+        <div className="ministry-card flex flex-col bg-white overflow-hidden shadow-premium group">
+            <div className="ministry-banner p-10 relative overflow-hidden flex flex-col justify-center">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 rounded-full blur-[70px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-4 mb-4">
+                     <BrainCircuit className="text-accent animate-pulse" size={28} />
+                     <span className="text-[11px] font-black text-accent uppercase tracking-[0.3em]">Institutional Intelligence Matrix</span>
+                  </div>
+                  <h3 className="text-3xl font-black text-white leading-tight">توصيات القيادة السيادية</h3>
+                  <div className="h-0.5 w-16 bg-accent mt-6" />
+                </div>
+            </div>
+
+            <div className="p-10 flex-1 overflow-y-auto max-h-[700px] custom-scrollbar bg-slate-50/20 relative">
+               {isAnalyzing ? (
+                 <div className="h-full flex flex-col items-center justify-center gap-10">
+                    <div className="relative">
+                      <div className="w-24 h-24 border-4 border-accent/10 border-t-accent rounded-full animate-spin shadow-premium" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                         <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-accent shadow-2xl">
+                            <Cpu size={28} className="animate-pulse" />
+                         </div>
+                      </div>
+                    </div>
+                    <div className="text-center space-y-4">
+                      <p className="text-sm font-black tracking-[0.2em] uppercase text-primary animate-pulse">Running Neural Grid Analysis</p>
+                      <p className="text-[11px] font-bold text-text-muted opacity-60">Cross-referencing multi-departmental KPIs and performance risk vectors...</p>
+                    </div>
                  </div>
-              </div>
-          <div className="p-10 flex-1 overflow-y-auto max-h-[650px] custom-scrollbar bg-slate-50/30">
-             {isAnalyzing ? (
-               <div className="h-full flex flex-col items-center justify-center gap-8 text-text-muted">
-                  <div className="relative">
-                    <div className="w-16 h-16 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
-                    <BrainCircuit size={24} className="absolute inset-0 m-auto text-accent animate-pulse" />
-                  </div>
-                  <div className="text-center space-y-2">
-                    <p className="text-sm font-black tracking-widest uppercase text-primary animate-pulse">Processing Ministry Intelligence...</p>
-                    <p className="text-[10px] technical-label text-text-muted">Analyzing correlation patterns and risk vectors</p>
-                  </div>
-               </div>
-             ) : strategicInsights ? (
-               <div className="prose prose-slate prose-sm text-right leading-loose font-medium ai-markdown-container max-w-none">
-                  <Markdown>{strategicInsights}</Markdown>
-               </div>
-             ) : (
-               <div className="h-full flex flex-col items-center justify-center gap-8 text-center py-20 opacity-40">
-                  <div className="w-24 h-24 bg-white rounded-[2.5rem] shadow-lg flex items-center justify-center text-slate-200 border border-slate-100">
-                     <FileSearch size={44} />
-                  </div>
-                  <div className="space-y-3">
-                    <p className="text-xs font-bold text-primary max-w-[250px] leading-relaxed mx-auto uppercase tracking-widest">Awaiting Analysis Command</p>
-                    <p className="text-[10px] technical-label">System idle. Performance data available for processing.</p>
-                  </div>
-               </div>
-             )}
-          </div>
+               ) : strategicInsights ? (
+                 <motion.div 
+                   initial={{ opacity: 0 }}
+                   animate={{ opacity: 1 }}
+                   className="prose prose-slate prose-sm text-right leading-loose font-medium ai-markdown-container max-w-none"
+                 >
+                    <Markdown>{strategicInsights}</Markdown>
+                 </motion.div>
+               ) : (
+                 <div className="h-full flex flex-col items-center justify-center gap-10 text-center py-24 group-hover:scale-105 transition-transform duration-700">
+                    <div className="w-28 h-28 bg-white rounded-[3rem] shadow-premium flex items-center justify-center text-slate-100 border border-slate-100 relative group-hover:rotate-12 transition-all">
+                       <FileSearch size={48} className="text-slate-200" />
+                       <div className="absolute top-2 right-2 w-4 h-4 bg-accent rounded-full border-4 border-white shadow-sm" />
+                    </div>
+                    <div className="space-y-4">
+                      <p className="text-sm font-black text-primary max-w-[250px] leading-relaxed mx-auto uppercase tracking-widest">النظام بانتظار أمر التحليل</p>
+                      <p className="text-[11px] font-bold text-text-muted opacity-50 px-8">اضغط على زر "تفعيل الخوارزمية" لبدء المعالجة الذكية لبيانات الوزارة المجمعة.</p>
+                    </div>
+                 </div>
+               )}
+            </div>
         </div>
       </div>
     </div>

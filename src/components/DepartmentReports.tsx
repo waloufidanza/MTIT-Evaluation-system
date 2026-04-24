@@ -23,7 +23,8 @@ import {
   Clock,
   ShieldAlert,
   Search,
-  BookOpen
+  BookOpen,
+  ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -203,153 +204,186 @@ export default function DepartmentReports() {
   };
 
   return (
-    <div className="space-y-12 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="bg-white rounded-[2.5rem] border border-border-theme shadow-sm overflow-hidden">
-        <div className="p-8 border-b-4 border-accent bg-primary text-white">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/10 rounded-xl">
-              <Building2 size={32} className="text-accent" />
+    <div className="space-y-12 pb-24 px-4 md:px-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000">
+      <div className="ministry-card overflow-hidden bg-white shadow-premium">
+        <div className="ministry-banner p-10 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex items-center gap-6">
+            <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-premium">
+              <Building2 size={36} className="text-accent" />
             </div>
             <div>
-              <h2 className="text-2xl font-black uppercase tracking-wide italic">تقارير الهيكل التنظيمي للوزارة</h2>
-              <p className="text-[11px] text-white/70 font-bold uppercase tracking-[0.2em] mt-1">تحليل الأداء الوظيفي حسب القطاعات الرئيسية</p>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-2 h-2 rounded-full bg-accent animate-ping" />
+                <span className="text-[10px] text-accent font-black uppercase tracking-[0.4em]">Organizational Integrity Hub</span>
+              </div>
+              <h2 className="text-4xl font-black text-white italic tracking-tighter">تحليل الأداء المؤسسي الشامل</h2>
             </div>
+          </div>
+          <div className="flex gap-4">
+             <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md text-right">
+                <div className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">Last Update</div>
+                <div className="text-white text-xs font-black">اليوم، {new Date().toLocaleTimeString('ar-YE')}</div>
+             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-border-theme">
+        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-border-theme bg-slate-50/30">
           <StatBox 
-             icon={<Users className="text-blue-500" />}
-             label="إجمالي القطاعات النشطة"
+             icon={<Users className="text-primary" />}
+             label="إجمالي الوحدات التابعة"
              value={Object.keys(departmentData).length.toString()}
           />
           <StatBox 
-             icon={<Target className="text-emerald-500" />}
-             label="أعلى نسبة إنجاز"
+             icon={<Target className="text-accent" />}
+             label="أعلى مؤشر كفاءة قطاعي"
              value={`${Math.max(...Object.values(departmentData).flat().map(d => d.completionRate), 0).toFixed(0)}%`}
           />
           <StatBox 
-             icon={<Award className="text-amber-500" />}
-             label="المتوسط العام للوزارة"
+             icon={<Award className="text-primary" />}
+             label="معدل المخرجات الوزاري"
              value={`${(Object.values(departmentData).flat().reduce((acc, d) => acc + d.averageScore, 0) / (Object.values(departmentData).flat().length || 1)).toFixed(1)}%`}
           />
         </div>
       </div>
 
-      {/* Filters and Sorting */}
-      <div className="bg-white rounded-xl border border-border-theme p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm mb-8">
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="p-2 bg-slate-50 border border-border-theme rounded-lg text-primary">
-            <Filter size={18} />
+      {/* Control Panel */}
+      <div className="bg-white rounded-3xl border border-border-theme p-6 flex flex-col lg:flex-row items-center justify-between gap-6 shadow-premium">
+        <div className="flex flex-wrap items-center gap-6 w-full lg:w-auto">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-primary border border-slate-200">
+              <Filter size={18} />
+            </div>
+            <div className="flex flex-col">
+               <span className="text-[9px] font-black text-text-muted uppercase tracking-widest">تصفية حسب النطاق</span>
+               <select 
+                value={selectedCategory} 
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="bg-transparent text-sm font-black text-primary outline-none cursor-pointer py-1"
+               >
+                <option value="All">كافة القطاعات السيادية</option>
+                {Object.keys(CATEGORIES).map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+                <option value="أخرى / غير مصنف">أخرى / غير مصنف</option>
+               </select>
+            </div>
           </div>
-          <select 
-            value={selectedCategory} 
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="bg-transparent text-xs font-black uppercase tracking-wider outline-none cursor-pointer p-1"
-          >
-            <option value="All">كافة القطاعات</option>
-            {Object.keys(CATEGORIES).map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-            <option value="أخرى / غير مصنف">أخرى / غير مصنف</option>
-          </select>
+
+          <div className="h-10 w-px bg-border-theme hidden lg:block" />
+
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-primary border border-slate-200">
+              <ArrowUpDown size={18} />
+            </div>
+            <div className="flex flex-col">
+               <span className="text-[9px] font-black text-text-muted uppercase tracking-widest">فرز المؤشرات</span>
+               <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="bg-transparent text-sm font-black text-primary outline-none cursor-pointer py-1"
+               >
+                <option value="score">ترتيب حسب متوسط الأداء</option>
+                <option value="staffCount">ترتيب حسب القوة البشرية</option>
+                <option value="rate">ترتيب حسب نضج الإنجاز</option>
+                <option value="name">ترتيب أبجدي تصاعدي</option>
+               </select>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black text-text-muted uppercase tracking-widest whitespace-nowrap">فرز حسب:</span>
-            <select 
-              value={sortBy} 
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-slate-50 border border-border-theme rounded px-3 py-1.5 text-[11px] font-bold outline-none cursor-pointer focus:ring-1 focus:ring-primary transition-all"
-            >
-              <option value="score">متوسط الأداء</option>
-              <option value="staffCount">عدد الكادر</option>
-              <option value="rate">نسبة الإنجاز</option>
-              <option value="name">الاسم</option>
-            </select>
-          </div>
+        <div className="flex items-center gap-4 w-full lg:w-auto justify-end">
           <button 
             onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-            className="p-2 bg-white border border-border-theme rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
-            title={sortOrder === 'asc' ? 'ترتيب تنازلي' : 'ترتيب تصاعدي'}
+            className={`p-3 rounded-xl border transition-all shadow-sm ${sortOrder === 'asc' ? 'bg-primary text-white border-primary' : 'bg-white text-primary border-border-theme'}`}
           >
-            <ArrowUpDown size={16} className={sortOrder === 'asc' ? 'rotate-180 transition-transform' : 'transition-transform'} />
+            <ArrowUpDown size={20} />
           </button>
           
-          <div className="w-px h-6 bg-border-theme hidden md:block mx-2" />
-
           <button 
             onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-[11px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md shadow-emerald-200"
+            className="flex items-center gap-3 px-8 py-3.5 bg-emerald-600 text-white rounded-xl text-[13px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-premium"
           >
-            <Download size={14} /> تصدير CSV
+            <Download size={18} /> استخراج البيانات CSV
           </button>
         </div>
       </div>
 
-      {/* Alerts & Training Needs Section */}
-      <div className="bg-red-50/50 border border-red-100 rounded-[2.5rem] p-8 mb-12">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+      {/* Critical Risk / Alert Section */}
+      <div className="bg-red-50/30 border border-red-100 rounded-[3rem] p-10 shadow-inner relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-red-100/20 rounded-full blur-[80px] -translate-y-20 translate-x-20 pointer-events-none" />
+        
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-12 relative z-10">
           <div>
-            <h3 className="text-sm font-bold text-red-600 uppercase tracking-widest flex items-center gap-2">
-              <ShieldAlert size={20} /> تقرير التنبيهات والاحتياجات التدريبية
-            </h3>
-            <p className="text-[10px] text-red-600/70 font-bold mt-1 uppercase">حصر الكادر ذوي الأداء المنخفض في الانضباط أو الحضور</p>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center shadow-sm">
+                 <ShieldAlert size={28} />
+              </div>
+              <h3 className="text-2xl font-black text-red-900 tracking-tighter">تقرير المخاطر والاحتياجات التدريبية</h3>
+            </div>
+            <p className="text-sm font-bold text-red-700/60 max-w-xl leading-relaxed">تحليل الكادر الذي يظهر تراجعاً في مؤشرات الانضباط السلوكي أو الحضور الميداني، مع تحديد المسارات التصحيحية المقترحة.</p>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-red-100 shadow-sm">
-             <AlertTriangle size={14} className="text-red-500" />
-             <span className="text-[11px] font-black text-red-600">إجمالي التنبيهات: {alertEmployees.length}</span>
+          <div className="flex items-center gap-4 px-8 py-4 bg-white rounded-2xl border border-red-100 shadow-premium">
+             <div className="text-right">
+                <div className="text-[9px] font-black text-red-900/40 uppercase tracking-widest">Active Alerts</div>
+                <div className="text-xl font-black text-red-600"> {alertEmployees.length} حالة حرجة</div>
+             </div>
+             <AlertTriangle size={24} className="text-red-500 animate-pulse" />
           </div>
         </div>
 
         {alertEmployees.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4">
-            {alertEmployees.map(emp => (
+          <div className="grid grid-cols-1 gap-6">
+            {alertEmployees.map((emp, i) => (
               <motion.div 
                 key={emp.id}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                className="bg-white rounded-2xl p-6 border border-red-100 shadow-sm flex flex-col lg:flex-row items-center gap-6"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-white rounded-3xl p-8 border border-red-100 shadow-premium flex flex-col lg:flex-row items-center gap-10 hover:shadow-red-900/5 transition-all"
               >
-                <div className="flex items-center gap-4 flex-1">
-                  <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center font-black uppercase">
+                <div className="flex items-center gap-6 flex-1">
+                  <div className="w-16 h-16 bg-red-600 text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg shadow-red-200">
                     {emp.name[0]}
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-black text-text-dark">{emp.name}</h4>
-                    <p className="text-[10px] text-text-muted font-bold uppercase truncate">{emp.position} - {emp.department}</p>
+                    <h4 className="text-xl font-black text-primary mb-1">{emp.name}</h4>
+                    <div className="flex items-center gap-3">
+                       <span className="text-[11px] font-black text-text-muted uppercase tracking-wider">{emp.position}</span>
+                       <div className="w-1 h-1 rounded-full bg-slate-300" />
+                       <span className="text-[11px] font-bold text-accent italic">{emp.department}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="px-4 py-2 bg-slate-50 rounded-xl border border-border-theme text-center min-w-[120px]">
-                    <p className="text-[8px] font-black text-text-muted uppercase mb-1">حالة الحضور</p>
-                    <p className={`text-[10px] font-black ${['poor', 'average'].includes(emp.lastEval.attendance) ? 'text-red-600' : 'text-emerald-600'}`}>
-                      {emp.lastEval.attendance === 'poor' ? 'تحذير (ضعيف)' : emp.lastEval.attendance === 'average' ? 'يحتاج تحسين' : emp.lastEval.attendance}
+                <div className="flex flex-wrap items-center gap-6">
+                  <div className="px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100 text-center min-w-[140px] shadow-inner">
+                    <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-2">مؤشر الحضور</p>
+                    <p className={`text-sm font-black ${['poor', 'average'].includes(emp.lastEval.attendance) ? 'text-red-600' : 'text-emerald-600'}`}>
+                      {emp.lastEval.attendance === 'poor' ? 'عجز حاد (ضعيف)' : emp.lastEval.attendance === 'average' ? 'تحت المتوسط' : emp.lastEval.attendance}
                     </p>
                   </div>
-                  <div className="px-4 py-2 bg-slate-50 rounded-xl border border-border-theme text-center min-w-[120px]">
-                    <p className="text-[8px] font-black text-text-muted uppercase mb-1">الالتزام السلوكي</p>
-                    <p className={`text-[10px] font-black ${['warning', 'needs-improvement'].includes(emp.lastEval.discipline) ? 'text-red-600' : 'text-emerald-600'}`}>
-                      {emp.lastEval.discipline === 'warning' ? 'تحذير إداري' : emp.lastEval.discipline === 'needs-improvement' ? 'يحتاج تحسين' : emp.lastEval.discipline}
+                  <div className="px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100 text-center min-w-[140px] shadow-inner">
+                    <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-2">الانضباط العام</p>
+                    <p className={`text-sm font-black ${['warning', 'needs-improvement'].includes(emp.lastEval.discipline) ? 'text-red-600' : 'text-emerald-600'}`}>
+                      {emp.lastEval.discipline === 'warning' ? 'تحذير سيادي' : emp.lastEval.discipline === 'needs-improvement' ? 'يحتاج توجيه' : emp.lastEval.discipline}
                     </p>
                   </div>
                 </div>
 
-                <div className="w-full lg:w-1/3 bg-amber-50/50 p-4 rounded-xl border border-amber-100">
-                  <p className="text-[9px] font-black text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1">
-                    <BookOpen size={12} /> الاحتياجات التدريبية المقترحة
+                <div className="w-full lg:w-1/3 bg-slate-900 p-6 rounded-2xl text-white relative overflow-hidden group/training">
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-accent/20 rounded-full blur-2xl -translate-y-10 translate-x-10" />
+                  <p className="text-[10px] font-black text-accent uppercase tracking-widest mb-4 flex items-center gap-2 relative z-10">
+                    <BookOpen size={14} /> التدخل التدريبي اللازم
                   </p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 relative z-10">
                     {emp.lastEval.trainingNeeds && emp.lastEval.trainingNeeds.length > 0 ? (
-                      emp.lastEval.trainingNeeds.map((need: string, i: number) => (
-                        <span key={i} className="px-2 py-0.5 bg-white text-amber-700 text-[9px] font-bold rounded-md border border-amber-200">
+                      emp.lastEval.trainingNeeds.map((need: string, idx: number) => (
+                        <span key={idx} className="px-3 py-1 bg-white/10 text-white text-[11px] font-bold rounded-lg border border-white/5 backdrop-blur-sm">
                           {need}
                         </span>
                       ))
                     ) : (
-                      <span className="text-[9px] text-amber-600 italic">بانتظار تحديد المسار التدريبي</span>
+                      <span className="text-[11px] text-white/40 italic">بانتظار اعتماد مسار التطوير الاستراتيجي</span>
                     )}
                   </div>
                 </div>
@@ -357,75 +391,90 @@ export default function DepartmentReports() {
             ))}
           </div>
         ) : (
-          <div className="p-12 text-center bg-white/50 rounded-2xl border border-dashed border-red-200">
-             <p className="text-sm text-red-400 font-bold italic">لا توجد تنبيهات نشطة حالياً. كافة الكادر ضمن مستويات الأداء المطلوبة.</p>
+          <div className="p-16 text-center bg-white/50 rounded-[3rem] border-2 border-dashed border-red-200 shadow-inner">
+             <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Target size={40} />
+             </div>
+             <h4 className="text-xl font-black text-primary mb-2 italic">صفر من حالة الخطر المكتشفة</h4>
+             <p className="text-xs text-text-muted font-bold">كافة وحدات الكادر تعمل ضمن النطاق الآمن للأداء المؤسسي.</p>
           </div>
         )}
       </div>
 
       {Object.entries(departmentData).map(([category, depts]) => (
-        <div key={category} className="space-y-4">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="h-px bg-border-theme flex-1" />
-            <h3 className="text-xs font-black text-primary uppercase tracking-[0.3em] bg-bg-theme px-4">{category}</h3>
-            <div className="h-px bg-border-theme flex-1" />
+        <div key={category} className="space-y-8 animate-in fade-in duration-1000">
+          <div className="flex items-center gap-6 mb-10">
+            <div className="h-[2px] bg-gradient-to-l from-primary/20 to-transparent flex-1" />
+            <h3 className="text-sm font-black text-primary uppercase tracking-[0.4em] bg-bg-theme px-8">{category}</h3>
+            <div className="h-[2px] bg-gradient-to-r from-primary/20 to-transparent flex-1" />
           </div>
           
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-6">
             {depts.map((dept, idx) => (
               <motion.div 
                 key={dept.name}
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className={`bg-white rounded-xl border transition-all duration-300 overflow-hidden ${
-                  expandedDept === dept.name ? 'border-primary ring-1 ring-primary/20 shadow-xl' : 'border-border-theme shadow-sm hover:border-text-muted/20'
+                className={`ministry-card transition-all duration-500 overflow-hidden group/dept ${
+                  expandedDept === dept.name ? 'ring-2 ring-accent border-accent shadow-2xl scale-[1.01]' : 'bg-white hover:border-slate-300'
                 }`}
               >
             <div 
-              className="p-6 cursor-pointer flex items-center justify-between gap-6"
+              className="p-8 cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-10"
               onClick={() => setExpandedDept(expandedDept === dept.name ? null : dept.name)}
             >
-              <div className="flex items-center gap-5 flex-1">
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-black text-xl ${
-                  dept.averageScore >= 90 ? 'bg-emerald-100 text-emerald-700' :
-                  dept.averageScore >= 75 ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'
+              <div className="flex items-center gap-8 flex-1">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center font-black text-2xl shadow-premium border transition-all group-hover/dept:rotate-6 ${
+                  dept.averageScore >= 90 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                  dept.averageScore >= 75 ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-slate-50 text-slate-600 border-slate-100'
                 }`}>
                   {idx + 1}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-black text-text-dark">{dept.name}</h3>
-                  <div className="flex items-center gap-4 mt-1">
-                    <span className="text-[10px] font-bold text-text-muted uppercase flex items-center gap-1">
-                      <Users size={12} /> {dept.staffCount} موظف
+                  <h3 className="text-2xl font-black text-primary mb-2 group-hover/dept:text-accent transition-colors">{dept.name}</h3>
+                  <div className="flex items-center gap-6">
+                    <span className="text-[11px] font-black text-text-muted uppercase flex items-center gap-2 opacity-60">
+                      <Users size={14} /> {dept.staffCount} موظف ضمن الهيكل
                     </span>
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase flex items-center gap-1">
-                      <TrendingUp size={12} /> تم تقييم {dept.evaluatedCount}
+                    <span className="text-[11px] font-black text-emerald-600 uppercase flex items-center gap-2">
+                       <ShieldCheck size={14} /> تقييم {dept.evaluatedCount} كادر
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-8">
+              <div className="flex items-center gap-12">
                 <div className="text-left">
-                  <p className="text-[10px] font-black text-text-muted uppercase mb-1">متوسط الأداء</p>
-                  <p className={`text-2xl font-black ${
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2 opacity-50">Score Benchmark</p>
+                  <p className={`text-4xl font-black tracking-tighter ${
                     dept.averageScore >= 90 ? 'text-emerald-600' :
                     dept.averageScore >= 75 ? 'text-blue-600' : 'text-amber-600'
                   }`}>%{dept.averageScore.toFixed(0)}</p>
                 </div>
                 
-                <div className="w-px h-10 bg-border-theme" />
+                <div className="w-[1px] h-14 bg-slate-100" />
                 
-                <div className="flex items-center gap-3">
-                   <div className="relative w-12 h-12">
-                      <svg className="w-full h-full" viewBox="0 0 36 36">
-                        <path className="text-slate-100 stroke-current" strokeWidth="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <path className="text-primary stroke-current" strokeWidth="3" strokeDasharray={`${dept.completionRate}, 100`} fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <div className="flex items-center gap-6">
+                   <div className="relative w-16 h-16">
+                      <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                        <path className="text-slate-100 stroke-current" strokeWidth="3" fill="none" d="M18 1.5 a 16.5 16.5 0 0 1 0 33 a 16.5 16.5 0 0 1 0 -33" />
+                        <motion.path 
+                          initial={{ strokeDasharray: "0, 100" }}
+                          animate={{ strokeDasharray: `${dept.completionRate}, 100` }}
+                          transition={{ duration: 1.5, ease: "circOut" }}
+                          className="text-primary stroke-current" 
+                          strokeWidth="3.5" 
+                          strokeLinecap="round"
+                          fill="none" 
+                          d="M18 1.5 a 16.5 16.5 0 0 1 0 33 a 16.5 16.5 0 0 1 0 -33" 
+                        />
                       </svg>
-                      <div className="absolute inset-0 flex items-center justify-center text-[8px] font-bold">%{dept.completionRate.toFixed(0)}</div>
+                      <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black tracking-tighter text-primary">%{dept.completionRate.toFixed(0)}</div>
                    </div>
-                   {expandedDept === dept.name ? <ChevronUp size={20} className="text-text-muted" /> : <ChevronDown size={20} className="text-text-muted" />}
+                   <div className={`p-2 rounded-lg transition-all ${expandedDept === dept.name ? 'bg-primary text-white rotate-180' : 'bg-slate-50 text-slate-400 group-hover/dept:bg-slate-100'}`}>
+                      <ChevronDown size={20} />
+                   </div>
                 </div>
               </div>
             </div>
@@ -436,34 +485,43 @@ export default function DepartmentReports() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="border-t border-border-theme bg-slate-50/50"
+                  className="border-t border-slate-100 bg-slate-50/30"
                 >
-                  <div className="p-8">
-                     <div className="bg-white rounded-xl border border-border-theme overflow-hidden">
+                  <div className="p-10">
+                     <div className="ministry-card border-slate-200 overflow-hidden bg-white shadow-inner">
                         <table className="w-full text-right text-xs">
-                           <thead className="bg-[#f8f9fa] border-b border-border-theme">
+                           <thead className="bg-[#f8f9fa]/80 border-b border-slate-200">
                               <tr>
-                                 <th className="px-6 py-4 font-black text-text-muted uppercase tracking-wider">اسم الموظف</th>
-                                 <th className="px-6 py-4 font-black text-text-muted uppercase tracking-wider">المسمى الوظيفي</th>
-                                 <th className="px-6 py-4 font-black text-text-muted uppercase tracking-wider">آخر تقييم</th>
-                                 <th className="px-6 py-4 font-black text-text-muted uppercase tracking-wider text-left">الحالة</th>
+                                 <th className="px-8 py-5 text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">اسم الموظف الثلاثي</th>
+                                 <th className="px-8 py-5 text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">المسمى الوظيفي المعتمد</th>
+                                 <th className="px-8 py-5 text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">مؤشر آخر تقييم</th>
+                                 <th className="px-8 py-5 text-[10px] font-black text-text-muted uppercase tracking-[0.2em] text-left">الحالة</th>
                               </tr>
                            </thead>
-                           <tbody className="divide-y divide-border-theme">
+                           <tbody className="divide-y divide-slate-100">
                               {dept.employees.map(emp => {
                                  const lastEval = dept.evaluations.find(e => e.employeeId === emp.id);
                                  return (
-                                    <tr key={emp.id} className="hover:bg-slate-50 transition-colors">
-                                       <td className="px-6 py-4 font-bold text-text-dark">{emp.name}</td>
-                                       <td className="px-6 py-4 text-text-muted">{emp.position}</td>
-                                       <td className="px-6 py-4 font-black text-primary">
-                                          {lastEval ? `%${lastEval.totalScore.toFixed(0)}` : 'لم يتم التقييم'}
+                                    <tr key={emp.id} className="hover:bg-slate-50/50 transition-colors">
+                                       <td className="px-8 py-5 font-black text-primary text-sm">{emp.name}</td>
+                                       <td className="px-8 py-5 font-bold text-text-muted italic">{emp.position}</td>
+                                       <td className="px-8 py-5">
+                                          <div className="flex items-center gap-3">
+                                             <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden w-24">
+                                                <div className={`h-full rounded-full ${
+                                                  lastEval ? (lastEval.totalScore >= 90 ? 'bg-emerald-500' : lastEval.totalScore >= 75 ? 'bg-blue-500' : 'bg-amber-500') : 'bg-transparent'
+                                                }`} style={{ width: lastEval ? `${lastEval.totalScore}%` : '0%' }} />
+                                             </div>
+                                             <span className="font-black text-primary min-w-[35px]">
+                                                {lastEval ? `%${lastEval.totalScore.toFixed(0)}` : 'N/A'}
+                                             </span>
+                                          </div>
                                        </td>
-                                       <td className="px-6 py-4 text-left">
-                                          <span className={`px-2 py-1 rounded-full text-[9px] font-black uppercase ${
-                                             lastEval ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                                       <td className="px-8 py-5 text-left">
+                                          <span className={`px-4 py-1.5 rounded-[0.75rem] text-[10px] font-black uppercase tracking-widest shadow-sm ${
+                                             lastEval ? 'bg-emerald-600 text-white' : 'bg-red-500/10 text-red-600 border border-red-200'
                                           }`}>
-                                             {lastEval ? 'مكتمل' : 'معلق'}
+                                             {lastEval ? 'مكتمل دورياً' : 'متأخر معلق'}
                                           </span>
                                        </td>
                                     </tr>
@@ -477,7 +535,7 @@ export default function DepartmentReports() {
               )}
             </AnimatePresence>
           </motion.div>
-        ))}
+            ))}
           </div>
         </div>
       ))}
